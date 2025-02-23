@@ -1,11 +1,5 @@
 import React from "react";
-import Select, {
-  components,
-  GroupBase,
-  OptionProps,
-  ActionMeta,
-  SingleValue, StylesConfig
-} from "react-select";
+import Select, {ActionMeta, components, GroupBase, OptionProps, SingleValue, StylesConfig} from "react-select";
 
 type OptionType = {
   value: string;
@@ -30,10 +24,19 @@ const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
       borderColor: '#2684FF'
     },
   }),
-  option: (provided) => ({
+  option: (provided, state) => ({
     ...provided,
     padding: '8px 12px',
     fontSize: '16px',
+    backgroundColor: state.isSelected
+      ? '#e6f7ff'
+      : state.isFocused
+        ? '#f5faff'
+        : 'white',
+    color: '#333',
+    '&:active': {
+      backgroundColor: state.isSelected ? '#e6f7ff' : '#f0f0f0'
+    }
   }),
   singleValue: (provided) => ({
     ...provided,
@@ -57,7 +60,7 @@ const CustomOption = (
 
   return (
     <components.Option {...props}>
-      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 12px' }}>
+      <div style={{display: 'flex', alignItems: 'center', padding: '8px 12px'}}>
         <img
           src={props.data.image}
           alt={props.data.label}
@@ -68,9 +71,9 @@ const CustomOption = (
             borderRadius: '50%'
           }}
         />
-        <span style={{ fontSize: '16px', fontWeight: 500, color: '#333' }}>
+        <span style={{fontSize: '16px', fontWeight: 500, color: '#333'}}>
           {props.data.label}
-        </span>        <span style={{ marginLeft: 'auto', ...badgeStyle }}>
+        </span> <span style={{marginLeft: 'auto', ...badgeStyle}}>
           {props.data.installed ? "Installed" : "Not Installed"}
         </span>
       </div>
