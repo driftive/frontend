@@ -1,9 +1,11 @@
 import React from "react";
-import Layout, {Content} from "antd/es/layout/layout";
-import Title from "antd/es/skeleton/Title";
 import Button from "antd/es/button";
 import {GithubOutlined} from "@ant-design/icons";
 import {API_URL} from "../../configs.ts";
+import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
+import {Flex, Typography} from "antd";
+
+const {Title} = Typography;
 
 export const LoginPage: React.FC = () => {
 
@@ -12,9 +14,9 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <Layout style={{height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-      <Content style={{textAlign: 'center'}}>
-        <Title level={2}>Welcome to Our App</Title>
+    <PageContainer>
+      <Flex vertical justify={"center"} align={"center"}>
+        <Title level={2}>Driftive</Title>
         <Button
           type="primary"
           icon={<GithubOutlined/>}
@@ -23,7 +25,7 @@ export const LoginPage: React.FC = () => {
         >
           Login with GitHub
         </Button>
-      </Content>
-    </Layout>
+      </Flex>
+    </PageContainer>
   );
 }
