@@ -84,16 +84,6 @@ export const OrganizationsPage: React.FC = () => {
 
         </Content>
       </Layout>
-
-      // <Row
-      //   style={{minHeight: '100vh'}}
-      //   justify="center"
-      //   align="middle"
-      // >
-      //   <Col>
-      //
-      //   </Col>
-      // </Row>
     )
   }
 ;
