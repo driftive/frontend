@@ -4,7 +4,7 @@ import Select, {
   GroupBase,
   OptionProps,
   ActionMeta,
-  SingleValue
+  SingleValue, StylesConfig
 } from "react-select";
 
 type OptionType = {
@@ -19,33 +19,60 @@ export interface MainOrgSelectProps {
   onChange: (newValue: SingleValue<OptionType>, action: ActionMeta<OptionType>) => void;
 }
 
-// Custom Option component to render image and label
+const customStyles: StylesConfig<OptionType, false, GroupBase<OptionType>> = {
+  control: (provided, state) => ({
+    ...provided,
+    minHeight: '48px',
+    borderRadius: '8px',
+    borderColor: state.isFocused ? '#2684FF' : provided.borderColor,
+    boxShadow: state.isFocused ? '0 0 0 2px rgba(38, 132, 255, 0.3)' : provided.boxShadow,
+    '&:hover': {
+      borderColor: '#2684FF'
+    },
+  }),
+  option: (provided) => ({
+    ...provided,
+    padding: '8px 12px',
+    fontSize: '16px',
+  }),
+  singleValue: (provided) => ({
+    ...provided,
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '16px'
+  })
+};
+
 const CustomOption = (
   props: OptionProps<OptionType, false, GroupBase<OptionType>>
 ) => {
 
-  // const badgeStyle = {
-  //   padding: '2px 8px',
-  //   borderRadius: '12px',
-  //   backgroundColor: props.data.installed ? 'rgba(0, 128, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)',
-  //   color: props.data.installed ? 'green' : 'red',
-  //   fontSize: '12px'
-  // };
+  const badgeStyle = {
+    padding: '2px 8px',
+    borderRadius: '12px',
+    backgroundColor: props.data.installed ? 'rgba(0, 128, 0, 0.1)' : 'rgba(255, 0, 0, 0.1)',
+    color: props.data.installed ? 'green' : 'red',
+    fontSize: '12px'
+  };
 
   return (
     <components.Option {...props}>
-      <div style={{display: 'flex', alignItems: 'center'}}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '8px 12px' }}>
         <img
           src={props.data.image}
           alt={props.data.label}
-          style={{width: '24px', height: '24px', marginRight: '8px'}}
+          style={{
+            width: '42px',
+            height: '42px',
+            marginRight: '12px',
+            borderRadius: '50%'
+          }}
         />
-        <span>{props.data.label}</span>
-        {props.data.installed ? (
-          <span style={{marginLeft: 'auto', color: 'green'}}>Installed</span>
-        ) : (
-          <span style={{marginLeft: 'auto', color: 'red'}}>Not Installed</span>
-        )}
+        <span style={{ fontSize: '16px', fontWeight: 500, color: '#333' }}>
+          {props.data.label}
+        </span>        <span style={{ marginLeft: 'auto', ...badgeStyle }}>
+          {props.data.installed ? "Installed" : "Not Installed"}
+        </span>
       </div>
     </components.Option>
   );
@@ -58,6 +85,8 @@ const MainOrgSelect: React.FC<MainOrgSelectProps> = ({options, onChange}) => {
       onChange={onChange}
       components={{Option: CustomOption}}
       placeholder="Select an organization..."
+      styles={customStyles}
+
     />
   );
 };
