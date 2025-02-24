@@ -1,49 +1,88 @@
-import React from "react";
-import {GitRepository} from "../../../model/GitRepository.ts";
-import {GitOrganization} from "../../../model/GitOrganization.ts";
-import {Card, Divider, Flex, Layout, Typography} from "antd";
-import Button from "antd/es/button";
+import React from 'react';
+import {Button, Card, Layout, Space, Typography} from 'antd';
+import {GitRepository} from '../../../model/GitRepository.ts';
+import {GitOrganization} from '../../../model/GitOrganization.ts';
+import {useMutation, useQuery, useQueryClient} from "react-query";
+import useAxios from "../../../context/auth/axios.ts";
+import {isOk} from "../../../utils/axios.ts";
 
 const {Content} = Layout;
-const {Paragraph, Title} = Typography;
+const {Title, Paragraph, Text} = Typography;
 
 export interface RepoConfigTabProps {
   organization: GitOrganization;
   repository: GitRepository;
 }
 
-export const RepoConfigTab: React.FC<RepoConfigTabProps> = () => {
+export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({repository}) => {
+  const axios = useAxios();
+  const queryClient = useQueryClient();
 
-  const repoToken = "test_123123"
+  const {data: tokenResponse} = useQuery({
+    queryKey: ["getRepoToken", repository],
+    enabled: (!!repository) && (repository.id !== undefined && repository.id !== null),
+    queryFn: async () => {
+      const response = await axios.get(`/v1/gh/repo/${repository.id}/token`);
+      if (!isOk(response)) {
+        throw new Error("Network response was not ok");
+      }
+      return response.data;
+    },
+  });
+
+  const regenerateToken = useMutation({
+    mutationKey: ["regenerateRepoToken", repository],
+    mutationFn: async () => {
+      const response = await axios.post(`/v1/gh/repo/${repository.id}/token`);
+      if (!isOk(response)) {
+        throw new Error("Network response was not ok");
+      }
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["getRepoToken", repository]);
+    }
+  });
+
+  const handleTokenAction = () => {
+    regenerateToken.mutate();
+  };
 
   return (
-    <Layout>
-      <Content>
-        <Divider orientation="left">Token</Divider>
-        <Card>
-          {/*<Title level={4}>Token</Title>*/}
-          <Paragraph copyable={{text: repoToken}} code>
-            {repoToken}
-          </Paragraph>
+    <Layout style={{backgroundColor: '#fff'}}>
+      <Content style={{padding: 24}}>
+        <Title level={4}>Repository Token</Title>
+        <Text type="secondary">
+          Use this token to send Driftive results. Keep it secret.
+        </Text>
+        <Card style={{marginTop: 16}}>
+          {tokenResponse && tokenResponse.token ? (
+            <Paragraph copyable={{text: tokenResponse.token}} code>
+              {tokenResponse.token}
+            </Paragraph>
+          ) : (
+            <Paragraph>
+              <Text type="secondary">No token found for this repository.</Text>
+            </Paragraph>
+          )}
+          <Space style={{marginTop: 16}}>
+            <Button type="primary" onClick={handleTokenAction}>
+              {tokenResponse && tokenResponse.token ? 'Regenerate Token' : 'Create Token'}
+            </Button>
+          </Space>
         </Card>
 
-        <Divider orientation="left" style={{marginTop: 16}}>Danger zone</Divider>
+        <Title level={4} style={{marginTop: 32, marginBottom: 16}}>
+          Danger Zone
+        </Title>
         <Card>
-          <Flex vertical>
-            <Flex justify={"space-between"}>
-              <Flex vertical>
-                <Title level={5}>Erase repository</Title>
-                <Paragraph>
-                  This action will erase all data associated with this repository. This action is irreversible.
-                </Paragraph>
-              </Flex>
-              <Flex>
-                <Button danger>Erase Repository</Button>
-              </Flex>
-            </Flex>
-          </Flex>
+          <Title level={5}>Erase Repository</Title>
+          <Paragraph>
+            This action permanently removes all data for this repository and cannot be undone.
+          </Paragraph>
+          <Button danger>Erase Repository</Button>
         </Card>
       </Content>
     </Layout>
-  )
-}
+  );
+};

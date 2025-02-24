@@ -8,8 +8,6 @@ import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
 import {RepoConfigTab} from "./tabs/RepoConfigTab.tsx";
 
-const {Title} = Typography;
-
 const ResultListTab = () => {
   return (
     <div>
@@ -70,21 +68,24 @@ export const RepositoryPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Card style={{
-        width: "60%",
-        borderRadius: 8,
-      }}
-            bordered={false}>
-        <Title level={3}><Link to={`/gh/${orgName}`}>{orgName}</Link> / {repoName}</Title>
+      <Card
+        style={{
+          width: '70%',
+          margin: '0 auto',
+          padding: '24px',
+          borderRadius: 8,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+        }}
+      >
+        <Typography.Title level={3}>
+          <Link to={`/gh/${orgName}`}>{orgName}</Link> / {repoName}
+        </Typography.Title>
         <Tabs
           defaultActiveKey={currentTab}
           onChange={(key: string) => {
-            if (
-              key === RepoPageTabs.CONFIGS ||
-              key === RepoPageTabs.RESULTS
-            ) {
-                setCurrentTab(key);
-                updateUrlTab(key);
+            if (key === RepoPageTabs.CONFIGS || key === RepoPageTabs.RESULTS) {
+              setCurrentTab(key);
+              updateUrlTab(key);
             }
           }}
           items={[
@@ -97,8 +98,6 @@ export const RepositoryPage: React.FC = () => {
           ]}
         />
       </Card>
-
-
     </PageContainer>
   );
 };
