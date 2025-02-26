@@ -39,7 +39,7 @@ export const RepositoriesPage: React.FC = () => {
     queryKey: "listOrgRepos",
     enabled: (!!organization) && (organization.id !== undefined),
     queryFn: async () => {
-      const response = await axios.get<RepositoryDTO[]>(`/v1/gh/org/${organization.id}/repos`);
+      const response = await axios.get<RepositoryDTO[]>(`/v1/org/${organization.id}/repos`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }

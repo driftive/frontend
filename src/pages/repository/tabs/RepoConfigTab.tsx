@@ -22,7 +22,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({repository}) => {
     queryKey: ["getRepoToken", repository],
     enabled: (!!repository) && (repository.id !== undefined && repository.id !== null),
     queryFn: async () => {
-      const response = await axios.get(`/v1/gh/repo/${repository.id}/token`);
+      const response = await axios.get(`/v1/repo/${repository.id}/token`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
@@ -33,7 +33,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({repository}) => {
   const regenerateToken = useMutation({
     mutationKey: ["regenerateRepoToken", repository],
     mutationFn: async () => {
-      const response = await axios.post(`/v1/gh/repo/${repository.id}/token`);
+      const response = await axios.post(`/v1/repo/${repository.id}/token`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }

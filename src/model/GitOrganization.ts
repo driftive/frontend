@@ -1,6 +1,6 @@
 export interface GitOrganization {
   id: number;
-  login: string;
+  name: string;
   installed: boolean;
   avatarUrl: string;
 }

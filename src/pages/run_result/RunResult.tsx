@@ -2,57 +2,87 @@ import React from "react";
 import {Table} from "antd";
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {dracula} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import {ProjectResult} from "../../model/ProjectResult.ts";
 import Search from "antd/es/input/Search";
+import {useQuery} from "react-query";
+import {useParams} from "react-router";
+import useAxios from "../../context/auth/axios.ts";
+import {isOk} from "../../utils/axios.ts";
+
+interface ProjectAnalysisRun {
+  id: number;
+  run_id: string;
+  dir: string;
+  type: string;
+  drifted: boolean;
+  succeeded: boolean;
+  init_output: string;
+  plan_output: string;
+}
+
+interface AnalysisRun {
+  uuid: string;
+  repository_id: number;
+  total_projects: number;
+  total_projects_drifted: number;
+  duration_millis: number;
+  created_at: string;
+  updated_at: string;
+  projects: ProjectAnalysisRun[];
+}
 
 const RunResultPage: React.FC = () => {
 
-  const dataSource: (ProjectResult & { key: string })[] = [
-    {
-      key: '1', project: 'gcp/project1',
-      adds: 1, changes: 0, destroys: 1, output: `
-Terraform will perform the following actions:
+  const [items, setItems] = React.useState<ProjectAnalysisRun[]>([]);
+  const [run, setRun] = React.useState<AnalysisRun | null>(null);
 
-  # null_resource.foo must be replaced
--/+ resource "null_resource" "foo" {
-      ~ id       = "4654577444608769802" -> (known after apply)
-      ~ triggers = { # forces replacement
-          ~ "foo" = "bar" -> "bar2"
-        }
+  const axios = useAxios();
+  const {org: orgName, repo: repoName, run: runUuid} = useParams();
+  const runQuery = useQuery({
+    queryKey: ["getRun", runUuid],
+    enabled: !!runUuid,
+    queryFn: async () => {
+      const response = await axios.get<AnalysisRun>(`/v1/analysis/run/${runUuid}`);
+      if (!isOk(response)) {
+        throw new Error("Network response was not ok");
+      }
+      return response.data;
     }
+  });
 
-Plan: 1 to add, 0 to change, 1 to destroy.
-    `
-    },
-    {
-      key: '2', project: 'gcp/project2', adds: 1, changes: 0, destroys: 1, output: `
-Terraform will perform the following actions:
-  
-    # null_resource.foo must be replaced
-`
+  React.useEffect(() => {
+    if (runQuery.data) {
+      setRun(runQuery.data);
+      setItems(runQuery.data.projects);
     }
-  ];
+  }, [runQuery.data]);
 
   const columns = [
     {
       title: 'Project',
-      dataIndex: 'project',
-      key: 'project',
+      dataIndex: 'dir',
+      key: 'dir',
     },
     {
-      title: 'Changes',
-      key: 'changes',
-      render: (_: React.ReactNode, record: ProjectResult) => (
-        <div>{record.adds} to add, {record.changes} to change, {record.destroys} to destroy</div>
+      title: 'Drifted',
+      key: 'drifted',
+      render: (_: React.ReactNode, record: ProjectAnalysisRun) => (
+        <div>{record.drifted ? 'Yes' : 'No'}</div>
       ),
     },
+    {
+      title: 'Errored',
+      key: 'succeeded',
+      render: (_: React.ReactNode, record: ProjectAnalysisRun) => (
+        <div>{record.succeeded ? 'No' : 'Yes'}</div>
+      ),
+    },
+
   ];
 
-  const expandedRowRender = (item: ProjectResult) => (
-    // simulate terminal output. Add linebreaks and color
+  const expandedRowRender = (item: ProjectAnalysisRun) => (
     <div>
       <SyntaxHighlighter language="hcl" style={dracula}>
-        {item.output}
+        {item.plan_output}
       </SyntaxHighlighter>
     </div>
   );
@@ -64,7 +94,10 @@ Terraform will perform the following actions:
               }}
               style={{marginBottom: '8px'}}
       />
-      <Table dataSource={dataSource} columns={columns}
+      <Table dataSource={items} columns={columns}
+             loading={runQuery.isLoading}
+             rowKey="id"
+             pagination={false}
              expandable={{expandedRowRender, expandRowByClick: true, showExpandColumn: true}}/>
     </div>
   );

@@ -14,6 +14,7 @@ export const AppRoutes = () => {
       <Route path="/:provider/orgs" element={<OrganizationsPage/>}/>
       <Route path="/:provider/:org" element={<RepositoriesPage/>}/>
       <Route path="/:provider/:org/:repo" element={<RepositoryPage/>}/>
+      <Route path="/:provider/:org/:repo/run/:run" element={<RunResultPage/>}/>
       <Route path="/results" element={<RunResultPage/>}/>
       <Route path="*" element={<div>Not Found</div>}/>
     </Routes>

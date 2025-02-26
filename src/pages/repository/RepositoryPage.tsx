@@ -7,14 +7,7 @@ import {useQuery} from "react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
 import {RepoConfigTab} from "./tabs/RepoConfigTab.tsx";
-
-const ResultListTab = () => {
-  return (
-    <div>
-      <p>ResultListTab</p>
-    </div>
-  );
-};
+import {RepoResultsTab} from "./tabs/RepoResultsTab.tsx";
 
 enum RepoPageTabs {
   RESULTS = 'results',
@@ -58,7 +51,7 @@ export const RepositoryPage: React.FC = () => {
     queryKey: ["getRepoByOrgIdAndName", orgName],
     enabled: (!!repoName) && (!!organization) && (organization.id !== undefined),
     queryFn: async () => {
-      const response = await axios.get(`/v1/gh/org/${organization.id}/repo?repo_name=${repoName}`);
+      const response = await axios.get(`/v1/org/${organization.id}/repo?repo_name=${repoName}`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
@@ -89,7 +82,11 @@ export const RepositoryPage: React.FC = () => {
             }
           }}
           items={[
-            {key: RepoPageTabs.RESULTS, label: 'Results', children: <ResultListTab/>},
+            {
+              key: RepoPageTabs.RESULTS,
+              label: 'Results',
+              children: <RepoResultsTab repository={repository} organization={organization}/>
+            },
             {
               key: RepoPageTabs.CONFIGS,
               label: 'Configs',
