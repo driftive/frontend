@@ -106,7 +106,8 @@ export const OrganizationsPage: React.FC = () => {
           <Button type="primary" onClick={() => {
             showGithubSyncModal();
           }}>Re-sync</Button>
-          <Modal title={"Github Sync"} open={isGithubSyncModalOpen} onOk={handleGithubSync}>
+          <Modal title={"Github Sync"} open={isGithubSyncModalOpen} onOk={handleGithubSync}
+                 onCancel={() => setIsGithubSyncModalOpen(false)}>
             <p>This will trigger a sync with Github to fetch organizations and repositories.</p>
             <p>Are you sure you want to proceed?</p>
           </Modal>
