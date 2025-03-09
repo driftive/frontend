@@ -49,6 +49,8 @@ const RunResultPage: React.FC = () => {
     }
   });
 
+  console.log('temp', run, orgName, repoName);
+
   React.useEffect(() => {
     if (runQuery.data) {
       setRun(runQuery.data);

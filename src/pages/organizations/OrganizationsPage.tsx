@@ -78,12 +78,7 @@ export const OrganizationsPage: React.FC = () => {
               return;
             }
             if (value.installed) {
-              axios.get(`/v1/gh/orgs/sync?org_id=${value.value}`)
               navigate(`/gh/${value.label}`)
-            } else {
-              // console.log(`Installing organization ${value.label}...`);
-              // window.location.href = `https://github.com/apps/<app_name>/installations/new`
-              axios.get(`/v1/gh/orgs/install?org_id=${value.value}`)
             }
           }}
           options={
