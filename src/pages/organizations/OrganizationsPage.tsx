@@ -24,9 +24,10 @@ export const OrganizationsPage: React.FC = () => {
 
   const [isGithubSyncModalOpen, setIsGithubSyncModalOpen] = React.useState(false);
   const showGithubSyncModal = () => setIsGithubSyncModalOpen(true);
-  const handleGithubSync = () => {
+  const handleGithubSync = async () => {
     setIsGithubSyncModalOpen(false);
     console.log("Syncing with Github...");
+    await axios.post("/v1/sync_user");
   }
 
   const listOrgsQuery = useQuery({
