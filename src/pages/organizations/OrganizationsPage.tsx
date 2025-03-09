@@ -1,11 +1,13 @@
 import React from "react";
 import {useQuery} from "react-query";
-import {Button, Card, Modal, Space, Typography} from "antd";
+import {Button, Card, Divider, Modal, Space, Tooltip, Typography} from "antd";
 import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";
 import MainOrgSelect from "../../components/MainOrgSelect/MainOrgSelect.tsx";
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 import {useNavigate} from "react-router";
+import {GITHUB_INSTALLATION_URL} from "../../configs.ts";
+import {QuestionCircleFilled} from "@ant-design/icons";
 
 const {Text, Title} = Typography;
 
@@ -106,6 +108,26 @@ export const OrganizationsPage: React.FC = () => {
             <p>This will trigger a sync with Github to fetch organizations and repositories.</p>
             <p>Are you sure you want to proceed?</p>
           </Modal>
+        </Space>
+
+        <Divider style={{margin: "24px 0"}}/>
+
+        <Space direction="vertical">
+          <Space><Text type="secondary">Need to install our GitHub app in an organization?</Text> <Tooltip
+            title={
+              <Text type={"warning"}>
+                Organizations won't appear until you've installed our GitHub app
+              </Text>
+            }
+          ><QuestionCircleFilled/>
+          </Tooltip>
+          </Space>
+          <Button
+            type="default"
+            onClick={() => window.open(GITHUB_INSTALLATION_URL, '_blank')}
+          >
+            Install GitHub App
+          </Button>
         </Space>
       </Card>
     </PageContainer>
