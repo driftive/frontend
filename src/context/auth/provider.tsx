@@ -15,7 +15,6 @@ const getInitialAuthState = (): AuthState => {
   return {isAuthenticated: false, token: undefined}; // Default state
 };
 
-// AuthProvider component
 type AuthProviderProps = { children: ReactNode };
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {

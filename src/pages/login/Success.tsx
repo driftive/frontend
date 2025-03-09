@@ -9,7 +9,6 @@ export const LoginSuccessPage = () => {
   const authDispatch = useAuthDispatch();
   const navigate = useNavigate();
 
-  // get token from url
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 

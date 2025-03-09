@@ -13,7 +13,6 @@ const {Title} = Typography;
 interface RepositoryDTO {
   id: number;
   name: string;
-  // full_name: string;
   is_private: boolean;
 }
 
@@ -56,7 +55,6 @@ export const RepositoriesPage: React.FC = () => {
       }}
             bordered={false}>
         <Title level={3}><Link to={`/gh/orgs`}><CaretLeftOutlined/></Link> {orgName}'s Repositories</Title>
-        {/*<Title level={2}>Repositories</Title>*/}
         <List
           itemLayout="horizontal"
           size={"small"}
