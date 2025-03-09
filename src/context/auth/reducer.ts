@@ -14,6 +14,6 @@ export const authReducer = (_state: AuthState, action: AuthAction): AuthState =>
       return newState;
     }
     default:
-      throw new Error(`Unhandled action type: ${(action as any).type}`);
+      throw new Error(`Unhandled action type: ${(action as AuthAction).type}`);
   }
 };
