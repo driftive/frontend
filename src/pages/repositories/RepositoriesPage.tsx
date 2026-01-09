@@ -1,14 +1,14 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Card, Flex, List, Skeleton, Spin, Tag, Typography} from "antd";
+import {Alert, Button, Card, Empty, Flex, List, Skeleton, Spin, Tag, Typography} from "antd";
 import React from "react";
-import {CaretLeftOutlined, GlobalOutlined, LockOutlined, RightOutlined} from "@ant-design/icons";
+import {CaretLeftOutlined, GlobalOutlined, LockOutlined, ReloadOutlined, RightOutlined} from "@ant-design/icons";
 import {Link, useNavigate, useParams} from "react-router";
 import {useQuery} from "react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
 
-const {Title} = Typography;
+const {Title, Text} = Typography;
 
 interface RepositoryDTO {
   id: number;
@@ -22,7 +22,7 @@ export const RepositoriesPage: React.FC = () => {
   const navigate = useNavigate();
   const {org: orgName} = useParams();
 
-  const {data: organization} = useQuery({
+  const orgQuery = useQuery({
     queryKey: ["getOrgByName", orgName],
     enabled: !!orgName,
     queryFn: async () => {
@@ -36,9 +36,9 @@ export const RepositoriesPage: React.FC = () => {
 
   const listReposQuery = useQuery({
     queryKey: "listOrgRepos",
-    enabled: (!!organization) && (organization.id !== undefined),
+    enabled: (!!orgQuery.data) && (orgQuery.data.id !== undefined),
     queryFn: async () => {
-      const response = await axios.get<RepositoryDTO[]>(`/v1/org/${organization.id}/repos`);
+      const response = await axios.get<RepositoryDTO[]>(`/v1/org/${orgQuery.data.id}/repos`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
@@ -46,7 +46,17 @@ export const RepositoriesPage: React.FC = () => {
     },
   });
 
-  const isLoading = !organization || listReposQuery.isLoading;
+  const isLoading = orgQuery.isLoading || listReposQuery.isLoading;
+  const isError = orgQuery.isError || listReposQuery.isError;
+  const isEmpty = !isLoading && !isError && listReposQuery.data?.length === 0;
+
+  const handleRetry = () => {
+    if (orgQuery.isError) {
+      orgQuery.refetch();
+    } else {
+      listReposQuery.refetch();
+    }
+  };
 
   return (
     <PageContainer>
@@ -66,6 +76,31 @@ export const RepositoriesPage: React.FC = () => {
               <Skeleton active avatar paragraph={{rows: 1}} />
             </div>
           </Spin>
+        ) : isError ? (
+          <Alert
+            title="Failed to load repositories"
+            description="We couldn't fetch the repositories for this organization. Please check your connection and try again."
+            type="error"
+            showIcon
+            action={
+              <Button
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={handleRetry}
+              >
+                Retry
+              </Button>
+            }
+          />
+        ) : isEmpty ? (
+          <Empty
+            description={
+              <Text type="secondary">
+                No repositories found in this organization
+              </Text>
+            }
+            style={{padding: '32px 0'}}
+          />
         ) : (
           <List
             itemLayout="horizontal"

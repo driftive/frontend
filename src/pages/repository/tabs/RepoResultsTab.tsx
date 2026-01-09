@@ -1,5 +1,6 @@
 import React from "react";
-import {Layout, Table, TableProps, Tooltip, Typography} from "antd";
+import {Alert, Button, Empty, Layout, Space, Table, TableProps, Tooltip, Typography} from "antd";
+import {ReloadOutlined, RocketOutlined} from "@ant-design/icons";
 import {GitOrganization} from "../../../model/GitOrganization.ts";
 import {GitRepository} from "../../../model/GitRepository.ts";
 import useAxios from "../../../context/auth/axios.ts";
@@ -101,24 +102,55 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
     }
   ];
 
+  const isEmpty = !repoAnalysisRuns.isLoading && !repoAnalysisRuns.isError && repoAnalysisRuns.data?.length === 0;
+
   return (
     <Layout style={{backgroundColor: '#fff'}}>
       <Layout.Content>
-
-        <Table size="small"
-               onRow={(record) => {
-                 return {
-                   "onClick": () => {
-                     navigate(`/gh/${organization.name}/${repository.name}/run/${record.uuid}`);
-                   },
-                   "style": {cursor: 'pointer'}
-                 }
-               }}
-               dataSource={repoAnalysisRuns.data}
-               rowKey="uuid" columns={columns}
-               loading={repoAnalysisRuns.isLoading}
-        />
-
+        {repoAnalysisRuns.isError ? (
+          <Alert
+            title="Failed to load analysis results"
+            description="We couldn't fetch the analysis results. Please try again."
+            type="error"
+            showIcon
+            action={
+              <Button
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={() => repoAnalysisRuns.refetch()}
+              >
+                Retry
+              </Button>
+            }
+          />
+        ) : isEmpty ? (
+          <Empty
+            image={<RocketOutlined style={{fontSize: 48, color: '#bfbfbf'}} />}
+            description={
+              <Space orientation="vertical" size="small">
+                <Typography.Text>No analysis results yet</Typography.Text>
+                <Typography.Text type="secondary">
+                  Run Driftive on your repository to see drift detection results here
+                </Typography.Text>
+              </Space>
+            }
+            style={{padding: '48px 0'}}
+          />
+        ) : (
+          <Table size="small"
+                 onRow={(record) => {
+                   return {
+                     "onClick": () => {
+                       navigate(`/gh/${organization.name}/${repository.name}/run/${record.uuid}`);
+                     },
+                     "style": {cursor: 'pointer'}
+                   }
+                 }}
+                 dataSource={repoAnalysisRuns.data}
+                 rowKey="uuid" columns={columns}
+                 loading={repoAnalysisRuns.isLoading}
+          />
+        )}
       </Layout.Content>
     </Layout>
   );

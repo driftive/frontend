@@ -1,13 +1,13 @@
 import React from "react";
 import {useQuery} from "react-query";
-import {Button, Card, Divider, Modal, Skeleton, Space, Spin, Tooltip, Typography} from "antd";
+import {Alert, Button, Card, Divider, Empty, Modal, Skeleton, Space, Spin, Tooltip, Typography} from "antd";
 import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";
 import MainOrgSelect from "../../components/MainOrgSelect/MainOrgSelect.tsx";
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 import {useNavigate} from "react-router";
 import {GITHUB_INSTALLATION_URL} from "../../configs.ts";
-import {QuestionCircleFilled, SyncOutlined} from "@ant-design/icons";
+import {QuestionCircleFilled, ReloadOutlined, SyncOutlined} from "@ant-design/icons";
 
 const {Text, Title} = Typography;
 
@@ -86,30 +86,64 @@ export const OrganizationsPage: React.FC = () => {
           Organizations
         </Title>
 
-        <MainOrgSelect
-          onChange={async (value) => {
-            if (!value) {
-              return;
+        {listOrgsQuery.isError ? (
+          <Alert
+            title="Failed to load organizations"
+            description="We couldn't fetch your organizations. Please check your connection and try again."
+            type="error"
+            showIcon
+            action={
+              <Button
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={() => listOrgsQuery.refetch()}
+              >
+                Retry
+              </Button>
             }
-            if (value.installed) {
-              navigate(`/gh/${value.label}`)
+            style={{marginBottom: 24}}
+          />
+        ) : listOrgsQuery.data?.length === 0 ? (
+          <Empty
+            description={
+              <Space orientation="vertical" size="small">
+                <Text>No organizations found</Text>
+                <Text type="secondary">
+                  Install the GitHub App in your organizations to get started
+                </Text>
+              </Space>
             }
-          }}
-          options={
-            listOrgsQuery.data?.map((org) => ({
-              value: org.id.toString(),
-              label: org.name,
-              installed: org.installed,
-              image: org.avatar_url || '',
-            })) || []
-          }
-        />
-
-        {listOrgsQuery.isError && (
-          <div>Error: {(listOrgsQuery.error as Error).message}</div>
+            style={{padding: '32px 0'}}
+          >
+            <Button
+              type="primary"
+              onClick={() => window.open(GITHUB_INSTALLATION_URL, '_blank')}
+            >
+              Install GitHub App
+            </Button>
+          </Empty>
+        ) : (
+          <MainOrgSelect
+            onChange={async (value) => {
+              if (!value) {
+                return;
+              }
+              if (value.installed) {
+                navigate(`/gh/${value.label}`)
+              }
+            }}
+            options={
+              listOrgsQuery.data?.map((org) => ({
+                value: org.id.toString(),
+                label: org.name,
+                installed: org.installed,
+                image: org.avatar_url || '',
+              })) || []
+            }
+          />
         )}
 
-        <Space direction="vertical" style={{marginTop: 24}}>
+        <Space orientation="vertical" style={{marginTop: 24}}>
           <Text type="secondary">Missing organizations?</Text>
           <Button
             type="primary"
@@ -130,7 +164,7 @@ export const OrganizationsPage: React.FC = () => {
 
         <Divider style={{margin: "24px 0"}}/>
 
-        <Space direction="vertical">
+        <Space orientation="vertical">
           <Space><Text type="secondary">Need to install our GitHub app in an organization?</Text> <Tooltip
             title={
               <Text type={"warning"}>

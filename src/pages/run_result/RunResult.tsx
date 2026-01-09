@@ -1,8 +1,10 @@
 import React from "react";
 import {
+  Alert,
   Breadcrumb,
   Button,
   Card,
+  Empty,
   Input,
   message,
   Segmented,
@@ -26,7 +28,9 @@ import {
   ClockCircleOutlined,
   CopyOutlined,
   ExclamationCircleOutlined,
+  FilterOutlined,
   ProjectOutlined,
+  ReloadOutlined,
   SearchOutlined,
   WarningOutlined
 } from "@ant-design/icons";
@@ -252,7 +256,7 @@ const RunResultPage: React.FC = () => {
         </div>
 
         {/* Filters */}
-        <Space direction="vertical" style={{width: '100%', marginBottom: 16}} size="middle">
+        <Space orientation="vertical" style={{width: '100%', marginBottom: 16}} size="middle">
           <Space wrap>
             <Input
               placeholder="Filter by project path..."
@@ -280,26 +284,69 @@ const RunResultPage: React.FC = () => {
           )}
         </Space>
 
+        {/* Error State */}
+        {runQuery.isError && (
+          <Alert
+            title="Failed to load analysis run"
+            description="We couldn't fetch the analysis run details. Please check your connection and try again."
+            type="error"
+            showIcon
+            action={
+              <Button
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={() => runQuery.refetch()}
+              >
+                Retry
+              </Button>
+            }
+            style={{marginBottom: 16}}
+          />
+        )}
+
         {/* Table */}
-        <Table
-          dataSource={filteredProjects}
-          columns={columns}
-          loading={runQuery.isLoading}
-          rowKey="id"
-          pagination={{
-            pageSize: 20,
-            showSizeChanger: true,
-            pageSizeOptions: ['10', '20', '50', '100'],
-            showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} projects`,
-          }}
-          scroll={{x: 'max-content'}}
-          expandable={{
-            expandedRowRender,
-            expandRowByClick: true,
-            showExpandColumn: true,
-          }}
-          size="middle"
-        />
+        {!runQuery.isError && (
+          <Table
+            dataSource={filteredProjects}
+            columns={columns}
+            loading={runQuery.isLoading}
+            rowKey="id"
+            pagination={{
+              pageSize: 20,
+              showSizeChanger: true,
+              pageSizeOptions: ['10', '20', '50', '100'],
+              showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} projects`,
+            }}
+            scroll={{x: 'max-content'}}
+            expandable={{
+              expandedRowRender,
+              expandRowByClick: true,
+              showExpandColumn: true,
+            }}
+            size="middle"
+            locale={{
+              emptyText: searchText || statusFilter !== 'all' ? (
+                <Empty
+                  image={<FilterOutlined style={{fontSize: 48, color: '#bfbfbf'}} />}
+                  description={
+                    <Space orientation="vertical" size="small">
+                      <Typography.Text>No projects match your filters</Typography.Text>
+                      <Typography.Text type="secondary">
+                        Try adjusting your search or status filter
+                      </Typography.Text>
+                    </Space>
+                  }
+                >
+                  <Button onClick={() => { setSearchText(''); setStatusFilter('all'); }}>
+                    Clear Filters
+                  </Button>
+                </Empty>
+              ) : (
+                <Empty description="No projects in this analysis run" />
+              )
+            }}
+          />
+        )}
       </Card>
     </PageContainer>
   );

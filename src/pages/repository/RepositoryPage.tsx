@@ -1,8 +1,9 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Card, Skeleton, Spin, Tabs, Typography} from "antd";
+import {Alert, Button, Card, Skeleton, Spin, Tabs, Typography} from "antd";
 import React from "react";
 import {Link, useNavigate, useParams, useSearchParams} from "react-router";
+import {ReloadOutlined} from "@ant-design/icons";
 import {useQuery} from "react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
@@ -35,7 +36,7 @@ export const RepositoryPage: React.FC = () => {
     setCurrentTab(queryTab);
   }, [queryTab]);
 
-  const {data: organization} = useQuery({
+  const orgQuery = useQuery({
     queryKey: ["getOrgByName", orgName],
     enabled: !!orgName,
     queryFn: async () => {
@@ -47,11 +48,11 @@ export const RepositoryPage: React.FC = () => {
     },
   });
 
-  const {data: repository, isLoading: isRepoLoading} = useQuery({
+  const repoQuery = useQuery({
     queryKey: ["getRepoByOrgIdAndName", orgName],
-    enabled: (!!repoName) && (!!organization) && (organization.id !== undefined),
+    enabled: (!!repoName) && (!!orgQuery.data) && (orgQuery.data.id !== undefined),
     queryFn: async () => {
-      const response = await axios.get(`/v1/org/${organization.id}/repo?repo_name=${repoName}`);
+      const response = await axios.get(`/v1/org/${orgQuery.data.id}/repo?repo_name=${repoName}`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
@@ -59,7 +60,16 @@ export const RepositoryPage: React.FC = () => {
     },
   });
 
-  const isLoading = !organization || isRepoLoading;
+  const isLoading = orgQuery.isLoading || repoQuery.isLoading;
+  const isError = orgQuery.isError || repoQuery.isError;
+
+  const handleRetry = () => {
+    if (orgQuery.isError) {
+      orgQuery.refetch();
+    } else {
+      repoQuery.refetch();
+    }
+  };
 
   return (
     <PageContainer>
@@ -82,6 +92,22 @@ export const RepositoryPage: React.FC = () => {
               <Skeleton active paragraph={{rows: 4}} />
             </div>
           </Spin>
+        ) : isError ? (
+          <Alert
+            title="Failed to load repository"
+            description="We couldn't fetch the repository details. Please check your connection and try again."
+            type="error"
+            showIcon
+            action={
+              <Button
+                size="small"
+                icon={<ReloadOutlined />}
+                onClick={handleRetry}
+              >
+                Retry
+              </Button>
+            }
+          />
         ) : (
           <Tabs
             defaultActiveKey={currentTab}
@@ -95,12 +121,12 @@ export const RepositoryPage: React.FC = () => {
               {
                 key: RepoPageTabs.RESULTS,
                 label: 'Results',
-                children: <RepoResultsTab repository={repository} organization={organization}/>
+                children: <RepoResultsTab repository={repoQuery.data} organization={orgQuery.data}/>
               },
               {
                 key: RepoPageTabs.CONFIGS,
                 label: 'Configs',
-                children: <RepoConfigTab repository={repository} organization={organization}/>
+                children: <RepoConfigTab repository={repoQuery.data} organization={orgQuery.data}/>
               }
             ]}
           />
