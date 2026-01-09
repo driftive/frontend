@@ -1,13 +1,13 @@
 import React from "react";
 import {useQuery} from "react-query";
-import {Button, Card, Divider, Modal, Space, Tooltip, Typography} from "antd";
+import {Button, Card, Divider, Modal, Skeleton, Space, Spin, Tooltip, Typography} from "antd";
 import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";
 import MainOrgSelect from "../../components/MainOrgSelect/MainOrgSelect.tsx";
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 import {useNavigate} from "react-router";
 import {GITHUB_INSTALLATION_URL} from "../../configs.ts";
-import {QuestionCircleFilled} from "@ant-design/icons";
+import {QuestionCircleFilled, SyncOutlined} from "@ant-design/icons";
 
 const {Text, Title} = Typography;
 
@@ -23,11 +23,17 @@ export const OrganizationsPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [isGithubSyncModalOpen, setIsGithubSyncModalOpen] = React.useState(false);
+  const [isSyncing, setIsSyncing] = React.useState(false);
   const showGithubSyncModal = () => setIsGithubSyncModalOpen(true);
   const handleGithubSync = async () => {
     setIsGithubSyncModalOpen(false);
-    console.log("Syncing with Github...");
-    await axios.post("/v1/sync_user");
+    setIsSyncing(true);
+    try {
+      await axios.post("/v1/sync_user");
+      await listOrgsQuery.refetch();
+    } finally {
+      setIsSyncing(false);
+    }
   }
 
   const listOrgsQuery = useQuery({
@@ -55,7 +61,12 @@ export const OrganizationsPage: React.FC = () => {
           <Title level={3} style={{marginBottom: 24}}>
             Organizations
           </Title>
-          <div>Loading...</div>
+          <Spin tip="Loading organizations...">
+            <div style={{padding: '24px 0'}}>
+              <Skeleton.Input active style={{width: '100%', height: 38}} block />
+              <Skeleton active paragraph={{rows: 2}} style={{marginTop: 24}} />
+            </div>
+          </Spin>
         </Card>
       </PageContainer>
     );
@@ -94,16 +105,22 @@ export const OrganizationsPage: React.FC = () => {
           }
         />
 
-        {listOrgsQuery.isLoading && <div>Loading...</div>}
         {listOrgsQuery.isError && (
           <div>Error: {(listOrgsQuery.error as Error).message}</div>
         )}
 
         <Space direction="vertical" style={{marginTop: 24}}>
           <Text type="secondary">Missing organizations?</Text>
-          <Button type="primary" onClick={() => {
-            showGithubSyncModal();
-          }}>Re-sync</Button>
+          <Button
+            type="primary"
+            loading={isSyncing}
+            icon={isSyncing ? <SyncOutlined spin /> : undefined}
+            onClick={() => {
+              showGithubSyncModal();
+            }}
+          >
+            {isSyncing ? 'Syncing...' : 'Re-sync'}
+          </Button>
           <Modal title={"Github Sync"} open={isGithubSyncModalOpen} onOk={handleGithubSync}
                  onCancel={() => setIsGithubSyncModalOpen(false)}>
             <p>This will trigger a sync with Github to fetch organizations and repositories.</p>

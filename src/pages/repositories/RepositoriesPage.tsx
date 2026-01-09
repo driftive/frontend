@@ -1,6 +1,6 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Card, Flex, List, Tag, Typography} from "antd";
+import {Card, Flex, List, Skeleton, Spin, Tag, Typography} from "antd";
 import React from "react";
 import {CaretLeftOutlined, GlobalOutlined, LockOutlined, RightOutlined} from "@ant-design/icons";
 import {Link, useNavigate, useParams} from "react-router";
@@ -46,6 +46,8 @@ export const RepositoriesPage: React.FC = () => {
     },
   });
 
+  const isLoading = !organization || listReposQuery.isLoading;
+
   return (
     <PageContainer>
       <Card style={{
@@ -55,30 +57,39 @@ export const RepositoriesPage: React.FC = () => {
       }}
             bordered={false}>
         <Title level={3}><Link to={`/gh/orgs`}><CaretLeftOutlined/></Link> {orgName}'s Repositories</Title>
-        <List
-          itemLayout="horizontal"
-          size={"small"}
-          dataSource={listReposQuery.data}
-          renderItem={(item) => (
-            <List.Item onClick={() => {
-              navigate(`/gh/${orgName}/${item.name}`)
-            }}
-                       style={{cursor: "pointer"}}>
-              <List.Item.Meta
-                avatar={item.is_private ? <LockOutlined/> : <GlobalOutlined/>}
-                title={<Flex justify={"space-between"}>
-                  <Flex gap="0 8px"><p>{item.name}</p>{item.is_private ? (
-                    <Tag color="default">Private</Tag>) : (<></>)}
-                  </Flex>
-                  <RightOutlined/>
-                </Flex>}
-              />
-            </List.Item>
-          )}
-        />
+
+        {isLoading ? (
+          <Spin tip="Loading repositories...">
+            <div style={{padding: '16px 0'}}>
+              <Skeleton active avatar paragraph={{rows: 1}} />
+              <Skeleton active avatar paragraph={{rows: 1}} />
+              <Skeleton active avatar paragraph={{rows: 1}} />
+            </div>
+          </Spin>
+        ) : (
+          <List
+            itemLayout="horizontal"
+            size={"small"}
+            dataSource={listReposQuery.data}
+            renderItem={(item) => (
+              <List.Item onClick={() => {
+                navigate(`/gh/${orgName}/${item.name}`)
+              }}
+                         style={{cursor: "pointer"}}>
+                <List.Item.Meta
+                  avatar={item.is_private ? <LockOutlined/> : <GlobalOutlined/>}
+                  title={<Flex justify={"space-between"}>
+                    <Flex gap="0 8px"><p>{item.name}</p>{item.is_private ? (
+                      <Tag color="default">Private</Tag>) : (<></>)}
+                    </Flex>
+                    <RightOutlined/>
+                  </Flex>}
+                />
+              </List.Item>
+            )}
+          />
+        )}
       </Card>
-
-
     </PageContainer>
   );
 }

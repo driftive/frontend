@@ -6,6 +6,7 @@ import {
   Input,
   message,
   Segmented,
+  Skeleton,
   Space,
   Statistic,
   Table,
@@ -214,7 +215,14 @@ const RunResultPage: React.FC = () => {
             Analysis Run
           </Typography.Title>
 
-          {run && (
+          {runQuery.isLoading ? (
+            <Space size="large" wrap>
+              <Skeleton.Input active style={{width: 100, height: 60}} />
+              <Skeleton.Input active style={{width: 100, height: 60}} />
+              <Skeleton.Input active style={{width: 100, height: 60}} />
+              <Skeleton.Input active style={{width: 120, height: 60}} />
+            </Space>
+          ) : run && (
             <Space size="large" wrap>
               <Statistic
                 title="Total Projects"

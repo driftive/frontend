@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Card, Layout, Space, Typography} from 'antd';
+import {Button, Card, Layout, Skeleton, Space, Typography} from 'antd';
 import {GitRepository} from '../../../model/GitRepository.ts';
 import {GitOrganization} from '../../../model/GitOrganization.ts';
 import {useMutation, useQuery, useQueryClient} from "react-query";
@@ -18,7 +18,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({repository}) => {
   const axios = useAxios();
   const queryClient = useQueryClient();
 
-  const {data: tokenResponse} = useQuery({
+  const {data: tokenResponse, isLoading: isTokenLoading} = useQuery({
     queryKey: ["getRepoToken", repository],
     enabled: (!!repository) && (repository.id !== undefined && repository.id !== null),
     queryFn: async () => {
@@ -56,7 +56,9 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({repository}) => {
           Use this token to send Driftive results. Keep it secret.
         </Text>
         <Card style={{marginTop: 16}}>
-          {tokenResponse && tokenResponse.token ? (
+          {isTokenLoading ? (
+            <Skeleton active paragraph={{rows: 1}} />
+          ) : tokenResponse && tokenResponse.token ? (
             <Paragraph copyable={{text: tokenResponse.token}} code>
               {tokenResponse.token}
             </Paragraph>
@@ -66,7 +68,12 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({repository}) => {
             </Paragraph>
           )}
           <Space style={{marginTop: 16}}>
-            <Button type="primary" onClick={handleTokenAction}>
+            <Button
+              type="primary"
+              onClick={handleTokenAction}
+              loading={regenerateToken.isLoading}
+              disabled={isTokenLoading}
+            >
               {tokenResponse && tokenResponse.token ? 'Regenerate Token' : 'Create Token'}
             </Button>
           </Space>

@@ -1,6 +1,6 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Card, Tabs, Typography} from "antd";
+import {Card, Skeleton, Spin, Tabs, Typography} from "antd";
 import React from "react";
 import {Link, useNavigate, useParams, useSearchParams} from "react-router";
 import {useQuery} from "react-query";
@@ -47,7 +47,7 @@ export const RepositoryPage: React.FC = () => {
     },
   });
 
-  const {data: repository} = useQuery({
+  const {data: repository, isLoading: isRepoLoading} = useQuery({
     queryKey: ["getRepoByOrgIdAndName", orgName],
     enabled: (!!repoName) && (!!organization) && (organization.id !== undefined),
     queryFn: async () => {
@@ -58,6 +58,8 @@ export const RepositoryPage: React.FC = () => {
       return response.data;
     },
   });
+
+  const isLoading = !organization || isRepoLoading;
 
   return (
     <PageContainer>
@@ -73,27 +75,36 @@ export const RepositoryPage: React.FC = () => {
         <Typography.Title level={3}>
           <Link to={`/gh/${orgName}`}>{orgName}</Link> / {repoName}
         </Typography.Title>
-        <Tabs
-          defaultActiveKey={currentTab}
-          onChange={(key: string) => {
-            if (key === RepoPageTabs.CONFIGS || key === RepoPageTabs.RESULTS) {
-              setCurrentTab(key);
-              updateUrlTab(key);
-            }
-          }}
-          items={[
-            {
-              key: RepoPageTabs.RESULTS,
-              label: 'Results',
-              children: <RepoResultsTab repository={repository} organization={organization}/>
-            },
-            {
-              key: RepoPageTabs.CONFIGS,
-              label: 'Configs',
-              children: <RepoConfigTab repository={repository} organization={organization}/>
-            }
-          ]}
-        />
+
+        {isLoading ? (
+          <Spin tip="Loading repository...">
+            <div style={{padding: '24px 0'}}>
+              <Skeleton active paragraph={{rows: 4}} />
+            </div>
+          </Spin>
+        ) : (
+          <Tabs
+            defaultActiveKey={currentTab}
+            onChange={(key: string) => {
+              if (key === RepoPageTabs.CONFIGS || key === RepoPageTabs.RESULTS) {
+                setCurrentTab(key);
+                updateUrlTab(key);
+              }
+            }}
+            items={[
+              {
+                key: RepoPageTabs.RESULTS,
+                label: 'Results',
+                children: <RepoResultsTab repository={repository} organization={organization}/>
+              },
+              {
+                key: RepoPageTabs.CONFIGS,
+                label: 'Configs',
+                children: <RepoConfigTab repository={repository} organization={organization}/>
+              }
+            ]}
+          />
+        )}
       </Card>
     </PageContainer>
   );
