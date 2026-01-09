@@ -118,18 +118,30 @@ export const RepositoriesPage: React.FC = () => {
             itemLayout="horizontal"
             size={"small"}
             dataSource={listReposQuery.data}
+            aria-label="Repository list"
             renderItem={(item) => (
-              <List.Item onClick={() => {
-                navigate(`/gh/${orgName}/${item.name}`)
-              }}
-                         style={{cursor: "pointer"}}>
+              <List.Item
+                onClick={() => {
+                  navigate(`/gh/${orgName}/${item.name}`)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(`/gh/${orgName}/${item.name}`)
+                  }
+                }}
+                style={{cursor: "pointer"}}
+                tabIndex={0}
+                role="button"
+                aria-label={`Open repository ${item.name}${item.is_private ? ' (private)' : ''}`}
+              >
                 <List.Item.Meta
-                  avatar={item.is_private ? <LockOutlined/> : <GlobalOutlined/>}
+                  avatar={item.is_private ? <LockOutlined aria-hidden="true" /> : <GlobalOutlined aria-hidden="true" />}
                   title={<Flex justify={"space-between"}>
                     <Flex gap="0 8px"><p>{item.name}</p>{item.is_private ? (
                       <Tag color="default">Private</Tag>) : (<></>)}
                     </Flex>
-                    <RightOutlined/>
+                    <RightOutlined aria-hidden="true" />
                   </Flex>}
                 />
               </List.Item>

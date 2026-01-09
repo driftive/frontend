@@ -171,7 +171,7 @@ export const OrganizationsPage: React.FC = () => {
                 Organizations won't appear until you've installed our GitHub app
               </Text>
             }
-          ><QuestionCircleFilled/>
+          ><QuestionCircleFilled aria-label="More information about GitHub app installation" role="img" />
           </Tooltip>
           </Space>
           <Button

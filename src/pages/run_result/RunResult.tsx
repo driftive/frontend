@@ -126,6 +126,7 @@ const RunResultPage: React.FC = () => {
       dataIndex: 'dir',
       key: 'dir',
       ellipsis: true,
+      sorter: (a: ProjectAnalysisRun, b: ProjectAnalysisRun) => a.dir.localeCompare(b.dir),
       render: (dir: string) => (
         <Tooltip title={dir}>
           <Typography.Text code style={{fontSize: '12px'}}>{dir}</Typography.Text>
@@ -136,6 +137,14 @@ const RunResultPage: React.FC = () => {
       title: 'Status',
       key: 'status',
       width: 120,
+      sorter: (a: ProjectAnalysisRun, b: ProjectAnalysisRun) => {
+        const getStatusOrder = (p: ProjectAnalysisRun) => {
+          if (!p.succeeded) return 0; // Error first
+          if (p.drifted) return 1; // Drifted second
+          return 2; // OK last
+        };
+        return getStatusOrder(a) - getStatusOrder(b);
+      },
       render: (_: React.ReactNode, record: ProjectAnalysisRun) => {
         if (!record.succeeded) {
           return <Tag icon={<ExclamationCircleOutlined/>} color="error">Error</Tag>;
@@ -151,6 +160,7 @@ const RunResultPage: React.FC = () => {
       dataIndex: 'type',
       key: 'type',
       width: 100,
+      sorter: (a: ProjectAnalysisRun, b: ProjectAnalysisRun) => a.type.localeCompare(b.type),
       render: (type: string) => (
         <Tag>{type}</Tag>
       ),
@@ -160,9 +170,9 @@ const RunResultPage: React.FC = () => {
   const expandedRowRender = (item: ProjectAnalysisRun) => {
     const output = item.plan_output || item.init_output || 'No output available';
     return (
-      <div style={{position: 'relative'}}>
+      <div style={{position: 'relative'}} role="region" aria-label={`Output for ${item.dir}`}>
         <Button
-          icon={<CopyOutlined/>}
+          icon={<CopyOutlined aria-hidden="true" />}
           size="small"
           onClick={(e) => {
             e.stopPropagation();
@@ -174,6 +184,7 @@ const RunResultPage: React.FC = () => {
             right: 8,
             zIndex: 10,
           }}
+          aria-label="Copy output to clipboard"
         >
           Copy
         </Button>
@@ -260,11 +271,12 @@ const RunResultPage: React.FC = () => {
           <Space wrap>
             <Input
               placeholder="Filter by project path..."
-              prefix={<SearchOutlined/>}
+              prefix={<SearchOutlined aria-hidden="true" />}
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               allowClear
               style={{width: 300}}
+              aria-label="Filter projects by path"
             />
             <Segmented
               value={statusFilter}

@@ -1,6 +1,14 @@
 import React from "react";
-import {Alert, Button, Empty, Layout, Space, Table, TableProps, Tooltip, Typography} from "antd";
-import {ReloadOutlined, RocketOutlined} from "@ant-design/icons";
+import {Alert, Button, Card, Empty, Layout, Space, Statistic, Table, TableProps, Tooltip, Typography} from "antd";
+import {
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  ExclamationCircleOutlined,
+  HistoryOutlined,
+  ReloadOutlined,
+  RocketOutlined,
+  WarningOutlined
+} from "@ant-design/icons";
 import {GitOrganization} from "../../../model/GitOrganization.ts";
 import {GitRepository} from "../../../model/GitRepository.ts";
 import useAxios from "../../../context/auth/axios.ts";
@@ -24,16 +32,37 @@ interface RepoAnalysisResult {
   created_at: string;
 }
 
+interface RepositoryRunStats {
+  total_runs: number;
+  runs_with_drift: number;
+  last_run_at: string | null;
+  latest_run: RepoAnalysisResult | null;
+}
+
 export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, repository}) => {
 
   const navigate = useNavigate();
   const axios = useAxios();
   const [runsPage] = React.useState(0);
+  const [pageSize, setPageSize] = React.useState(10);
+
   const repoAnalysisRuns = useQuery({
     queryKey: ["getRepoAnalysisResults", repository],
     enabled: (!!repository) && (repository.id !== undefined && repository.id !== null),
     queryFn: async () => {
       const response = await axios.get(`/v1/repo/${repository.id}/runs?page=${runsPage}`);
+      if (!isOk(response)) {
+        throw new Error("Network response was not ok");
+      }
+      return response.data;
+    },
+  });
+
+  const repoStatsQuery = useQuery({
+    queryKey: ["getRepoStats", repository?.id],
+    enabled: (!!repository) && (repository.id !== undefined && repository.id !== null),
+    queryFn: async () => {
+      const response = await axios.get<RepositoryRunStats>(`/v1/repo/${repository.id}/stats`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
@@ -54,11 +83,13 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'projects',
       title: 'Projects',
       dataIndex: 'total_projects',
+      sorter: (a, b) => a.total_projects - b.total_projects,
     },
     {
       key: 'drifted',
       title: 'Drifted',
       dataIndex: 'total_projects_drifted',
+      sorter: (a, b) => a.total_projects_drifted - b.total_projects_drifted,
       render: (value) => {
         return (<Typography.Text type={value > 0 ? 'danger' : 'success'}>{value}</Typography.Text>);
       }
@@ -67,6 +98,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'duration',
       title: 'Duration',
       dataIndex: 'duration_millis',
+      sorter: (a, b) => (a.analysis_duration_millis ?? 0) - (b.analysis_duration_millis ?? 0),
       render: (value) => {
         return (<Tooltip title={dayjs.duration({milliseconds: value}).asSeconds() + 's'}>
             {dayjs.duration({milliseconds: value}).humanize(false)}
@@ -78,6 +110,8 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'date',
       title: 'Date',
       dataIndex: 'created_at',
+      sorter: (a, b) => dayjs(a.created_at).unix() - dayjs(b.created_at).unix(),
+      defaultSortOrder: 'descend',
       render: (value) => {
 
         let label: string;
@@ -104,9 +138,43 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
 
   const isEmpty = !repoAnalysisRuns.isLoading && !repoAnalysisRuns.isError && repoAnalysisRuns.data?.length === 0;
 
+  const stats = repoStatsQuery.data;
+
   return (
     <Layout style={{backgroundColor: '#fff'}}>
       <Layout.Content>
+        {/* Summary Statistics */}
+        {stats && !repoStatsQuery.isLoading && !repoStatsQuery.isError && stats.total_runs > 0 && (
+          <Card size="small" style={{marginBottom: 16, backgroundColor: '#fafafa'}}>
+            <Space size="large" wrap>
+              <Statistic
+                title="Total Runs"
+                value={stats.total_runs}
+                prefix={<HistoryOutlined />}
+              />
+              <Statistic
+                title="Runs with Drift"
+                value={stats.runs_with_drift}
+                valueStyle={{color: stats.runs_with_drift > 0 ? '#cf1322' : '#3f8600'}}
+                prefix={<WarningOutlined />}
+              />
+              <Tooltip title={stats.last_run_at ? dayjs(stats.last_run_at).format('lll') : ''}>
+                <Statistic
+                  title="Last Run"
+                  value={stats.last_run_at ? dayjs(stats.last_run_at).fromNow() : 'N/A'}
+                  prefix={<ClockCircleOutlined />}
+                />
+              </Tooltip>
+              <Statistic
+                title="Last Run Status"
+                value={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? `${stats.latest_run.total_projects_drifted} drifted` : 'No drift'}
+                valueStyle={{color: stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? '#cf1322' : '#3f8600'}}
+                prefix={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
+              />
+            </Space>
+          </Card>
+        )}
+
         {repoAnalysisRuns.isError ? (
           <Alert
             title="Failed to load analysis results"
@@ -143,12 +211,33 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
                      "onClick": () => {
                        navigate(`/gh/${organization.name}/${repository.name}/run/${record.uuid}`);
                      },
-                     "style": {cursor: 'pointer'}
+                     "onKeyDown": (e) => {
+                       if (e.key === 'Enter' || e.key === ' ') {
+                         e.preventDefault();
+                         navigate(`/gh/${organization.name}/${repository.name}/run/${record.uuid}`);
+                       }
+                     },
+                     "style": {cursor: 'pointer'},
+                     "tabIndex": 0,
+                     "role": "button",
+                     "aria-label": `View analysis run from ${dayjs(record.created_at).format('lll')}, ${record.total_projects_drifted} drifted projects`
                    }
                  }}
                  dataSource={repoAnalysisRuns.data}
-                 rowKey="uuid" columns={columns}
+                 rowKey="uuid"
+                 columns={columns}
                  loading={repoAnalysisRuns.isLoading}
+                 pagination={{
+                   pageSize: pageSize,
+                   showSizeChanger: true,
+                   pageSizeOptions: ['10', '20', '50'],
+                   showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} runs`,
+                   onChange: (_page, newPageSize) => {
+                     if (newPageSize !== pageSize) {
+                       setPageSize(newPageSize);
+                     }
+                   },
+                 }}
           />
         )}
       </Layout.Content>
