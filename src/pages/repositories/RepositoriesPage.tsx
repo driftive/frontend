@@ -1,9 +1,9 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Alert, Button, Card, Empty, Flex, List, Skeleton, Spin, Tag, Typography} from "antd";
+import {Alert, Breadcrumb, Button, Card, Empty, Flex, List, Skeleton, Spin, Tag, Typography} from "antd";
 import React from "react";
-import {CaretLeftOutlined, GlobalOutlined, LockOutlined, ReloadOutlined, RightOutlined} from "@ant-design/icons";
-import {Link, useNavigate, useParams} from "react-router";
+import {GlobalOutlined, HomeOutlined, LockOutlined, ReloadOutlined, RightOutlined} from "@ant-design/icons";
+import {useNavigate, useParams} from "react-router";
 import {useQuery} from "react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
@@ -66,7 +66,19 @@ export const RepositoriesPage: React.FC = () => {
         borderRadius: 8,
       }}
             bordered={false}>
-        <Title level={3}><Link to={`/gh/orgs`}><CaretLeftOutlined/></Link> {orgName}'s Repositories</Title>
+        <Breadcrumb
+          items={[
+            {
+              href: '/gh/orgs',
+              title: <><HomeOutlined /> Organizations</>,
+            },
+            {
+              title: orgName,
+            },
+          ]}
+          style={{marginBottom: 16}}
+        />
+        <Title level={3}>{orgName}'s Repositories</Title>
 
         {isLoading ? (
           <Spin tip="Loading repositories...">

@@ -1,9 +1,9 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Alert, Button, Card, Skeleton, Spin, Tabs, Typography} from "antd";
+import {Alert, Breadcrumb, Button, Card, Skeleton, Spin, Tabs, Typography} from "antd";
 import React from "react";
-import {Link, useNavigate, useParams, useSearchParams} from "react-router";
-import {ReloadOutlined} from "@ant-design/icons";
+import {useNavigate, useParams, useSearchParams} from "react-router";
+import {HomeOutlined, ReloadOutlined} from "@ant-design/icons";
 import {useQuery} from "react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
@@ -82,8 +82,24 @@ export const RepositoryPage: React.FC = () => {
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
         }}
       >
+        <Breadcrumb
+          items={[
+            {
+              href: '/gh/orgs',
+              title: <><HomeOutlined /> Organizations</>,
+            },
+            {
+              href: `/gh/${orgName}`,
+              title: orgName,
+            },
+            {
+              title: repoName,
+            },
+          ]}
+          style={{marginBottom: 16}}
+        />
         <Typography.Title level={3}>
-          <Link to={`/gh/${orgName}`}>{orgName}</Link> / {repoName}
+          {repoName}
         </Typography.Title>
 
         {isLoading ? (
