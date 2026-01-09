@@ -4,6 +4,7 @@ import {
   Breadcrumb,
   Button,
   Card,
+  Drawer,
   Empty,
   Input,
   message,
@@ -63,6 +64,8 @@ type StatusFilter = 'all' | 'drifted' | 'errored' | 'ok';
 const RunResultPage: React.FC = () => {
   const [searchText, setSearchText] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('drifted');
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [selectedProject, setSelectedProject] = React.useState<ProjectAnalysisRun | null>(null);
 
   const axios = useAxios();
   const {org: orgName, repo: repoName, run: runUuid} = useParams();
@@ -120,6 +123,26 @@ const RunResultPage: React.FC = () => {
     }
   };
 
+  const openProjectDrawer = (project: ProjectAnalysisRun) => {
+    setSelectedProject(project);
+    setDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setDrawerOpen(false);
+    setSelectedProject(null);
+  };
+
+  const getProjectStatus = (project: ProjectAnalysisRun) => {
+    if (!project.succeeded) {
+      return {tag: <Tag icon={<ExclamationCircleOutlined/>} color="error">Error</Tag>, label: 'Error'};
+    }
+    if (project.drifted) {
+      return {tag: <Tag icon={<WarningOutlined/>} color="warning">Drifted</Tag>, label: 'Drifted'};
+    }
+    return {tag: <Tag icon={<CheckCircleOutlined/>} color="success">OK</Tag>, label: 'OK'};
+  };
+
   const columns = [
     {
       title: 'Project',
@@ -145,15 +168,7 @@ const RunResultPage: React.FC = () => {
         };
         return getStatusOrder(a) - getStatusOrder(b);
       },
-      render: (_: React.ReactNode, record: ProjectAnalysisRun) => {
-        if (!record.succeeded) {
-          return <Tag icon={<ExclamationCircleOutlined/>} color="error">Error</Tag>;
-        }
-        if (record.drifted) {
-          return <Tag icon={<WarningOutlined/>} color="warning">Drifted</Tag>;
-        }
-        return <Tag icon={<CheckCircleOutlined/>} color="success">OK</Tag>;
-      },
+      render: (_: React.ReactNode, record: ProjectAnalysisRun) => getProjectStatus(record).tag,
     },
     {
       title: 'Type',
@@ -167,41 +182,8 @@ const RunResultPage: React.FC = () => {
     },
   ];
 
-  const expandedRowRender = (item: ProjectAnalysisRun) => {
-    const output = item.plan_output || item.init_output || 'No output available';
-    return (
-      <div style={{position: 'relative'}} role="region" aria-label={`Output for ${item.dir}`}>
-        <Button
-          icon={<CopyOutlined aria-hidden="true" />}
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            copyToClipboard(output);
-          }}
-          style={{
-            position: 'absolute',
-            top: 8,
-            right: 8,
-            zIndex: 10,
-          }}
-          aria-label="Copy output to clipboard"
-        >
-          Copy
-        </Button>
-        <div style={{maxHeight: '400px', overflow: 'auto', borderRadius: '8px'}}>
-          <SyntaxHighlighter
-            language="hcl"
-            style={dracula}
-            customStyle={{margin: 0, borderRadius: '8px'}}
-          >
-            {output}
-          </SyntaxHighlighter>
-        </div>
-      </div>
-    );
-  };
-
   const shortUuid = runUuid?.slice(0, 8) ?? '';
+  const selectedOutput = selectedProject?.plan_output || selectedProject?.init_output || 'No output available';
 
   return (
     <PageContainer>
@@ -329,12 +311,19 @@ const RunResultPage: React.FC = () => {
               pageSizeOptions: ['10', '20', '50', '100'],
               showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} projects`,
             }}
-            scroll={{x: 'max-content'}}
-            expandable={{
-              expandedRowRender,
-              expandRowByClick: true,
-              showExpandColumn: true,
-            }}
+            onRow={(record) => ({
+              onClick: () => openProjectDrawer(record),
+              onKeyDown: (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  openProjectDrawer(record);
+                }
+              },
+              style: {cursor: 'pointer'},
+              tabIndex: 0,
+              role: 'button',
+              'aria-label': `View output for ${record.dir}`,
+            })}
             size="middle"
             locale={{
               emptyText: searchText || statusFilter !== 'all' ? (
@@ -359,6 +348,48 @@ const RunResultPage: React.FC = () => {
             }}
           />
         )}
+
+        {/* Output Drawer */}
+        <Drawer
+          title={
+            selectedProject ? (
+              <Space orientation="vertical" size="small" style={{width: '100%'}}>
+                <Space>
+                  {getProjectStatus(selectedProject).tag}
+                  <Tag>{selectedProject.type}</Tag>
+                </Space>
+                <Typography.Text code style={{fontSize: '12px', wordBreak: 'break-all'}}>
+                  {selectedProject.dir}
+                </Typography.Text>
+              </Space>
+            ) : 'Project Output'
+          }
+          placement="right"
+          width={Math.min(1000, window.innerWidth * 0.9)}
+          onClose={closeDrawer}
+          open={drawerOpen}
+          extra={
+            <Button
+              icon={<CopyOutlined aria-hidden="true" />}
+              onClick={() => copyToClipboard(selectedOutput)}
+              aria-label="Copy output to clipboard"
+            >
+              Copy
+            </Button>
+          }
+        >
+          {selectedProject && (
+            <div style={{height: '100%', overflow: 'auto'}}>
+              <SyntaxHighlighter
+                language="hcl"
+                style={dracula}
+                customStyle={{margin: 0, borderRadius: '8px', minHeight: '100%'}}
+              >
+                {selectedOutput}
+              </SyntaxHighlighter>
+            </div>
+          )}
+        </Drawer>
       </Card>
     </PageContainer>
   );
