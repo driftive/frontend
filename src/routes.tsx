@@ -5,6 +5,7 @@ import {OrganizationsPage} from "./pages/organizations/OrganizationsPage.tsx";
 import RunResultPage from "./pages/run_result/RunResult.tsx";
 import {RepositoriesPage} from "./pages/repositories/RepositoriesPage.tsx";
 import {RepositoryPage} from "./pages/repository/RepositoryPage.tsx";
+import {AppLayout} from "./components/AppLayout/AppLayout.tsx";
 
 export const AppRoutes = () => {
   return (
@@ -12,11 +13,16 @@ export const AppRoutes = () => {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<LoginPage/>}/>
       <Route path="/login/success" element={<LoginSuccessPage/>}/>
-      <Route path="/:provider/orgs" element={<OrganizationsPage/>}/>
-      <Route path="/:provider/:org" element={<RepositoriesPage/>}/>
-      <Route path="/:provider/:org/:repo" element={<RepositoryPage/>}/>
-      <Route path="/:provider/:org/:repo/run/:run" element={<RunResultPage/>}/>
-      <Route path="/results" element={<RunResultPage/>}/>
+
+      {/* Authenticated routes with AppLayout */}
+      <Route element={<AppLayout />}>
+        <Route path="/:provider/orgs" element={<OrganizationsPage/>}/>
+        <Route path="/:provider/:org" element={<RepositoriesPage/>}/>
+        <Route path="/:provider/:org/:repo" element={<RepositoryPage/>}/>
+        <Route path="/:provider/:org/:repo/run/:run" element={<RunResultPage/>}/>
+        <Route path="/results" element={<RunResultPage/>}/>
+      </Route>
+
       <Route path="*" element={<div>Not Found</div>}/>
     </Routes>
   )

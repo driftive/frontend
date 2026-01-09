@@ -60,12 +60,10 @@ export const RepositoriesPage: React.FC = () => {
 
   return (
     <PageContainer>
-      <Card style={{
-        width: "65%",
-        maxWidth: 1024,
-        borderRadius: 8,
-      }}
-            bordered={false}>
+      <Card
+        style={{borderRadius: 12}}
+        styles={{body: {padding: 32}}}
+      >
         <Breadcrumb
           items={[
             {

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Card, Input, Layout, message, Modal, Skeleton, Space, Typography} from 'antd';
+import {Button, Card, Input, message, Modal, Skeleton, Space, Typography} from 'antd';
 import {ExclamationCircleOutlined} from '@ant-design/icons';
 import {GitRepository} from '../../../model/GitRepository.ts';
 import {GitOrganization} from '../../../model/GitOrganization.ts';
@@ -8,7 +8,6 @@ import useAxios from "../../../context/auth/axios.ts";
 import {isOk} from "../../../utils/axios.ts";
 import {useNavigate} from "react-router";
 
-const {Content} = Layout;
 const {Title, Paragraph, Text} = Typography;
 
 export interface RepoConfigTabProps {
@@ -87,13 +86,12 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
   };
 
   return (
-    <Layout style={{backgroundColor: '#fff'}}>
-      <Content style={{padding: 24}}>
-        <Title level={4}>Repository Token</Title>
+    <div style={{paddingTop: 16}}>
+      <Title level={4}>Repository Token</Title>
         <Text type="secondary">
           Use this token to send Driftive results. Keep it secret.
         </Text>
-        <Card style={{marginTop: 16}}>
+        <Card style={{marginTop: 16, borderRadius: 8}}>
           {isTokenLoading ? (
             <Skeleton active paragraph={{rows: 1}} />
           ) : tokenResponse && tokenResponse.token ? (
@@ -120,7 +118,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
         <Title level={4} style={{marginTop: 32, marginBottom: 16}}>
           Danger Zone
         </Title>
-        <Card style={{borderColor: '#ff4d4f'}}>
+        <Card style={{borderColor: '#ff4d4f', borderRadius: 8}}>
           <Title level={5}>Erase Repository</Title>
           <Paragraph>
             This action permanently removes all data for this repository and cannot be undone.
@@ -173,7 +171,6 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
             status={eraseConfirmText && eraseConfirmText !== repository?.name ? 'error' : undefined}
           />
         </Modal>
-      </Content>
-    </Layout>
+    </div>
   );
 };

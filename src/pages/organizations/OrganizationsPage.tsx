@@ -51,12 +51,8 @@ export const OrganizationsPage: React.FC = () => {
     return (
       <PageContainer>
         <Card
-          style={{
-            width: "65%",
-            maxWidth: 1024,
-            borderRadius: 8,
-          }}
-          bordered={false}
+          style={{borderRadius: 12}}
+          styles={{body: {padding: 32}}}
         >
           <Title level={3} style={{marginBottom: 24}}>
             Organizations
@@ -75,12 +71,8 @@ export const OrganizationsPage: React.FC = () => {
   return (
     <PageContainer>
       <Card
-        style={{
-          width: "65%",
-          maxWidth: 1024,
-          borderRadius: 8,
-        }}
-        bordered={false}
+        style={{borderRadius: 12}}
+        styles={{body: {padding: 32}}}
       >
         <Title level={3} style={{marginBottom: 24}}>
           Organizations

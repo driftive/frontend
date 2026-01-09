@@ -1,5 +1,5 @@
 import React from "react";
-import {Alert, Button, Card, Empty, Layout, Space, Statistic, Table, TableProps, Tooltip, Typography} from "antd";
+import {Alert, Button, Card, Empty, Space, Statistic, Table, TableProps, Tooltip, Typography} from "antd";
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -141,39 +141,38 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
   const stats = repoStatsQuery.data;
 
   return (
-    <Layout style={{backgroundColor: '#fff'}}>
-      <Layout.Content>
-        {/* Summary Statistics */}
-        {stats && !repoStatsQuery.isLoading && !repoStatsQuery.isError && stats.total_runs > 0 && (
-          <Card size="small" style={{marginBottom: 16, backgroundColor: '#fafafa'}}>
-            <Space size="large" wrap>
+    <div>
+      {/* Summary Statistics */}
+      {stats && !repoStatsQuery.isLoading && !repoStatsQuery.isError && stats.total_runs > 0 && (
+        <Card size="small" style={{marginBottom: 16, backgroundColor: '#fafafa', borderRadius: 8}}>
+          <Space size="large" wrap>
+            <Statistic
+              title="Total Runs"
+              value={stats.total_runs}
+              prefix={<HistoryOutlined />}
+            />
+            <Statistic
+              title="Runs with Drift"
+              value={stats.runs_with_drift}
+              valueStyle={{color: stats.runs_with_drift > 0 ? '#cf1322' : '#3f8600'}}
+              prefix={<WarningOutlined />}
+            />
+            <Tooltip title={stats.last_run_at ? dayjs(stats.last_run_at).format('lll') : ''}>
               <Statistic
-                title="Total Runs"
-                value={stats.total_runs}
-                prefix={<HistoryOutlined />}
+                title="Last Run"
+                value={stats.last_run_at ? dayjs(stats.last_run_at).fromNow() : 'N/A'}
+                prefix={<ClockCircleOutlined />}
               />
-              <Statistic
-                title="Runs with Drift"
-                value={stats.runs_with_drift}
-                valueStyle={{color: stats.runs_with_drift > 0 ? '#cf1322' : '#3f8600'}}
-                prefix={<WarningOutlined />}
-              />
-              <Tooltip title={stats.last_run_at ? dayjs(stats.last_run_at).format('lll') : ''}>
-                <Statistic
-                  title="Last Run"
-                  value={stats.last_run_at ? dayjs(stats.last_run_at).fromNow() : 'N/A'}
-                  prefix={<ClockCircleOutlined />}
-                />
-              </Tooltip>
-              <Statistic
-                title="Last Run Status"
-                value={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? `${stats.latest_run.total_projects_drifted} drifted` : 'No drift'}
-                valueStyle={{color: stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? '#cf1322' : '#3f8600'}}
-                prefix={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
-              />
-            </Space>
-          </Card>
-        )}
+            </Tooltip>
+            <Statistic
+              title="Last Run Status"
+              value={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? `${stats.latest_run.total_projects_drifted} drifted` : 'No drift'}
+              valueStyle={{color: stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? '#cf1322' : '#3f8600'}}
+              prefix={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
+            />
+          </Space>
+        </Card>
+      )}
 
         {repoAnalysisRuns.isError ? (
           <Alert
@@ -240,8 +239,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
                  }}
           />
         )}
-      </Layout.Content>
-    </Layout>
+    </div>
   );
 
 }
