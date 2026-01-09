@@ -57,7 +57,7 @@ type StatusFilter = 'all' | 'drifted' | 'errored' | 'ok';
 
 const RunResultPage: React.FC = () => {
   const [searchText, setSearchText] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all');
+  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('drifted');
 
   const axios = useAxios();
   const {org: orgName, repo: repoName, run: runUuid} = useParams();
