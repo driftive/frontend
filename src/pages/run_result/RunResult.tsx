@@ -21,7 +21,7 @@ import {
 } from "antd";
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {dracula} from 'react-syntax-highlighter/dist/esm/styles/prism';
-import {useQuery} from "react-query";
+import {useQuery} from "@tanstack/react-query";
 import {Link, useParams} from "react-router";
 import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";

@@ -1,4 +1,4 @@
-import {QueryClient} from "react-query";
+import {QueryClient} from "@tanstack/react-query";
 import {API_URL} from "./configs.ts";
 import axios from "axios";
 

@@ -4,7 +4,7 @@ import {Alert, Breadcrumb, Button, Card, Empty, Flex, List, Skeleton, Space, Spi
 import React from "react";
 import {FolderOutlined, GlobalOutlined, HomeOutlined, LockOutlined, ReloadOutlined, RightOutlined} from "@ant-design/icons";
 import {useNavigate, useParams} from "react-router";
-import {useQuery} from "react-query";
+import {useQuery} from "@tanstack/react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
 import {colors} from "../../theme/theme.ts";
@@ -37,7 +37,7 @@ export const RepositoriesPage: React.FC = () => {
   });
 
   const listReposQuery = useQuery({
-    queryKey: "listOrgRepos",
+    queryKey: ["listOrgRepos"],
     enabled: (!!orgQuery.data) && (orgQuery.data.id !== undefined),
     queryFn: async () => {
       const response = await axios.get<RepositoryDTO[]>(`/v1/org/${orgQuery.data.id}/repos`);

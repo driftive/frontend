@@ -5,7 +5,7 @@ import './index.css'
 import {BrowserRouter} from 'react-router';
 import {AppRoutes} from "./routes.tsx";
 import {AuthProvider} from "./context/auth/provider.tsx";
-import {QueryClientProvider} from "react-query";
+import {QueryClientProvider} from "@tanstack/react-query";
 import {queryClient} from "./api.ts";
 import {theme} from "./theme/theme.ts";
 

@@ -4,7 +4,7 @@ import {Alert, Breadcrumb, Button, Card, Flex, Skeleton, Space, Spin, Tabs, Typo
 import React from "react";
 import {useNavigate, useParams, useSearchParams} from "react-router";
 import {BarChartOutlined, GithubOutlined, HomeOutlined, ReloadOutlined, SettingOutlined} from "@ant-design/icons";
-import {useQuery} from "react-query";
+import {useQuery} from "@tanstack/react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
 import {RepoConfigTab} from "./tabs/RepoConfigTab.tsx";

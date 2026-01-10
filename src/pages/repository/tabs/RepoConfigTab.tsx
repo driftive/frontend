@@ -3,7 +3,7 @@ import {Button, Card, Input, message, Modal, Skeleton, Space, Typography} from '
 import {ExclamationCircleOutlined} from '@ant-design/icons';
 import {GitRepository} from '../../../model/GitRepository.ts';
 import {GitOrganization} from '../../../model/GitOrganization.ts';
-import {useMutation, useQuery, useQueryClient} from "react-query";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import useAxios from "../../../context/auth/axios.ts";
 import {isOk} from "../../../utils/axios.ts";
 import {useNavigate} from "react-router";
@@ -45,7 +45,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(["getRepoToken", repository]);
+      queryClient.invalidateQueries({queryKey: ["getRepoToken", repository]});
     }
   });
 
@@ -64,7 +64,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
     },
     onSuccess: () => {
       message.success('Repository data erased successfully');
-      queryClient.invalidateQueries(["listOrgRepos"]);
+      queryClient.invalidateQueries({queryKey: ["listOrgRepos"]});
       navigate(`/gh/${organization.name}`);
     },
     onError: () => {
@@ -107,7 +107,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
             <Button
               type="primary"
               onClick={handleTokenAction}
-              loading={regenerateToken.isLoading}
+              loading={regenerateToken.isPending}
               disabled={isTokenLoading}
             >
               {tokenResponse && tokenResponse.token ? 'Regenerate Token' : 'Create Token'}
@@ -126,7 +126,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
           <Button
             danger
             onClick={() => setIsEraseModalOpen(true)}
-            loading={eraseRepository.isLoading}
+            loading={eraseRepository.isPending}
           >
             Erase Repository
           </Button>
@@ -150,7 +150,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
               danger
               type="primary"
               disabled={eraseConfirmText !== repository?.name}
-              loading={eraseRepository.isLoading}
+              loading={eraseRepository.isPending}
               onClick={handleEraseRepository}
             >
               Erase Repository

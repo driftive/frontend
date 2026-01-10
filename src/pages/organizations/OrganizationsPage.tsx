@@ -1,5 +1,5 @@
 import React from "react";
-import {useQuery} from "react-query";
+import {useQuery} from "@tanstack/react-query";
 import {Alert, Button, Card, Empty, Flex, Modal, Skeleton, Space, Spin, Typography} from "antd";
 import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";
@@ -37,7 +37,7 @@ export const OrganizationsPage: React.FC = () => {
   }
 
   const listOrgsQuery = useQuery({
-    queryKey: "listOrgs",
+    queryKey: ["listOrgs"],
     queryFn: async () => {
       const response = await axios.get<OrganizationDTO[]>("/v1/gh/orgs");
       if (!isOk(response)) {

@@ -12,7 +12,7 @@ import {
 import {GitOrganization} from "../../../model/GitOrganization.ts";
 import {GitRepository} from "../../../model/GitRepository.ts";
 import useAxios from "../../../context/auth/axios.ts";
-import {useQuery} from "react-query";
+import {useQuery, keepPreviousData} from "@tanstack/react-query";
 import {isOk} from "../../../utils/axios.ts";
 import {dayjs} from "../../../utils/dayjs.ts";
 import {AnalysisResultIcon} from "../../../components/AnalysisResultIcon/AnalysisResultIcon.tsx";
@@ -51,7 +51,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
   const repoAnalysisRuns = useQuery({
     queryKey: ["getRepoAnalysisResults", repository?.id, currentPage],
     enabled: (!!repository) && (repository.id !== undefined && repository.id !== null),
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const apiPage = currentPage - 1;
       const response = await axios.get(`/v1/repo/${repository.id}/runs?page=${apiPage}`);
