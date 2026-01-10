@@ -15,6 +15,7 @@ interface RepositoryDTO {
   id: number;
   name: string;
   is_private: boolean;
+  has_analysis_token: boolean;
 }
 
 export const RepositoriesPage: React.FC = () => {
@@ -169,6 +170,9 @@ export const RepositoriesPage: React.FC = () => {
                       <Text strong>{item.name}</Text>
                       {item.is_private && (
                         <Tag color="default" style={{marginLeft: 8, fontSize: 11}}>Private</Tag>
+                      )}
+                      {item.has_analysis_token && (
+                        <Tag color="success" style={{marginLeft: 8, fontSize: 11}}>Enabled</Tag>
                       )}
                     </div>
                   </Space>
