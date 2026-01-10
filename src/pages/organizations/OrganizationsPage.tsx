@@ -1,13 +1,13 @@
 import React from "react";
 import {useQuery} from "react-query";
-import {Alert, Button, Card, Divider, Empty, Modal, Skeleton, Space, Spin, Tooltip, Typography} from "antd";
+import {Alert, Button, Card, Empty, Flex, Modal, Skeleton, Space, Spin, Typography} from "antd";
 import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";
 import MainOrgSelect from "../../components/MainOrgSelect/MainOrgSelect.tsx";
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 import {useNavigate} from "react-router";
 import {GITHUB_INSTALLATION_URL} from "../../configs.ts";
-import {QuestionCircleFilled, ReloadOutlined, SyncOutlined} from "@ant-design/icons";
+import {GithubOutlined, ReloadOutlined, SyncOutlined} from "@ant-design/icons";
 
 const {Text, Title} = Typography;
 
@@ -97,6 +97,7 @@ export const OrganizationsPage: React.FC = () => {
           />
         ) : listOrgsQuery.data?.length === 0 ? (
           <Empty
+            image={<GithubOutlined style={{fontSize: 48, color: '#bfbfbf'}} />}
             description={
               <Space orientation="vertical" size="small">
                 <Text>No organizations found</Text>
@@ -105,74 +106,91 @@ export const OrganizationsPage: React.FC = () => {
                 </Text>
               </Space>
             }
-            style={{padding: '32px 0'}}
+            style={{padding: '48px 0'}}
           >
-            <Button
-              type="primary"
-              onClick={() => window.open(GITHUB_INSTALLATION_URL, '_blank')}
-            >
-              Install GitHub App
-            </Button>
+            <Space>
+              <Button
+                type="primary"
+                icon={<GithubOutlined />}
+                onClick={() => window.open(GITHUB_INSTALLATION_URL, '_blank')}
+              >
+                Install GitHub App
+              </Button>
+              <Button
+                loading={isSyncing}
+                icon={<SyncOutlined spin={isSyncing} />}
+                onClick={showGithubSyncModal}
+              >
+                Re-sync
+              </Button>
+            </Space>
           </Empty>
         ) : (
-          <MainOrgSelect
-            onChange={async (value) => {
-              if (!value) {
-                return;
+          <>
+            <MainOrgSelect
+              onChange={async (value) => {
+                if (!value) {
+                  return;
+                }
+                if (value.installed) {
+                  navigate(`/gh/${value.label}`)
+                }
+              }}
+              options={
+                listOrgsQuery.data?.map((org) => ({
+                  value: org.id.toString(),
+                  label: org.name,
+                  installed: org.installed,
+                  image: org.avatar_url || '',
+                })) || []
               }
-              if (value.installed) {
-                navigate(`/gh/${value.label}`)
-              }
-            }}
-            options={
-              listOrgsQuery.data?.map((org) => ({
-                value: org.id.toString(),
-                label: org.name,
-                installed: org.installed,
-                image: org.avatar_url || '',
-              })) || []
-            }
-          />
+            />
+
+            {/* Action buttons */}
+            <Flex
+              justify="space-between"
+              align="center"
+              style={{
+                marginTop: 24,
+                paddingTop: 24,
+                borderTop: '1px solid #f0f0f0'
+              }}
+            >
+              <Text type="secondary" style={{fontSize: 13}}>
+                Missing an organization? Try syncing or install the GitHub App.
+              </Text>
+              <Space>
+                <Button
+                  size="small"
+                  icon={<SyncOutlined spin={isSyncing} />}
+                  loading={isSyncing}
+                  onClick={showGithubSyncModal}
+                >
+                  Re-sync
+                </Button>
+                <Button
+                  size="small"
+                  icon={<GithubOutlined />}
+                  onClick={() => window.open(GITHUB_INSTALLATION_URL, '_blank')}
+                >
+                  Install App
+                </Button>
+              </Space>
+            </Flex>
+          </>
         )}
 
-        <Space orientation="vertical" style={{marginTop: 24}}>
-          <Text type="secondary">Missing organizations?</Text>
-          <Button
-            type="primary"
-            loading={isSyncing}
-            icon={isSyncing ? <SyncOutlined spin /> : undefined}
-            onClick={() => {
-              showGithubSyncModal();
-            }}
-          >
-            {isSyncing ? 'Syncing...' : 'Re-sync'}
-          </Button>
-          <Modal title={"Github Sync"} open={isGithubSyncModalOpen} onOk={handleGithubSync}
-                 onCancel={() => setIsGithubSyncModalOpen(false)}>
-            <p>This will trigger a sync with Github to fetch organizations and repositories.</p>
-            <p>Are you sure you want to proceed?</p>
-          </Modal>
-        </Space>
-
-        <Divider style={{margin: "24px 0"}}/>
-
-        <Space orientation="vertical">
-          <Space><Text type="secondary">Need to install our GitHub app in an organization?</Text> <Tooltip
-            title={
-              <Text type={"warning"}>
-                Organizations won't appear until you've installed our GitHub app
-              </Text>
-            }
-          ><QuestionCircleFilled aria-label="More information about GitHub app installation" role="img" />
-          </Tooltip>
-          </Space>
-          <Button
-            type="default"
-            onClick={() => window.open(GITHUB_INSTALLATION_URL, '_blank')}
-          >
-            Install GitHub App
-          </Button>
-        </Space>
+        <Modal
+          title="Sync with GitHub"
+          open={isGithubSyncModalOpen}
+          onOk={handleGithubSync}
+          onCancel={() => setIsGithubSyncModalOpen(false)}
+          okText="Sync Now"
+        >
+          <Text>
+            This will fetch the latest organizations and repositories from GitHub.
+          </Text>
+        </Modal>
       </Card>
     </PageContainer>
   );

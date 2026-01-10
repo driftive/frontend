@@ -1,14 +1,15 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Alert, Breadcrumb, Button, Card, Skeleton, Spin, Tabs, Typography} from "antd";
+import {Alert, Breadcrumb, Button, Card, Flex, Skeleton, Space, Spin, Tabs, Typography} from "antd";
 import React from "react";
 import {useNavigate, useParams, useSearchParams} from "react-router";
-import {HomeOutlined, ReloadOutlined} from "@ant-design/icons";
+import {BarChartOutlined, GithubOutlined, HomeOutlined, ReloadOutlined, SettingOutlined} from "@ant-design/icons";
 import {useQuery} from "react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
 import {RepoConfigTab} from "./tabs/RepoConfigTab.tsx";
 import {RepoResultsTab} from "./tabs/RepoResultsTab.tsx";
+import {colors} from "../../theme/theme.ts";
 
 enum RepoPageTabs {
   RESULTS = 'results',
@@ -93,9 +94,40 @@ export const RepositoryPage: React.FC = () => {
           ]}
           style={{marginBottom: 16}}
         />
-        <Typography.Title level={3}>
-          {repoName}
-        </Typography.Title>
+        <Flex justify="space-between" align="center" style={{marginBottom: 8}}>
+          <Space size={12}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                backgroundColor: colors.primaryLight,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <GithubOutlined style={{fontSize: 20, color: colors.primary}} />
+            </div>
+            <div>
+              <Typography.Title level={3} style={{margin: 0}}>
+                {repoName}
+              </Typography.Title>
+              <Typography.Text type="secondary" style={{fontSize: 13}}>
+                {orgName}/{repoName}
+              </Typography.Text>
+            </div>
+          </Space>
+          <Button
+            type="text"
+            icon={<GithubOutlined />}
+            href={`https://github.com/${orgName}/${repoName}`}
+            target="_blank"
+            aria-label="View on GitHub"
+          >
+            View on GitHub
+          </Button>
+        </Flex>
 
         {isLoading ? (
           <Spin tip="Loading repository...">
@@ -121,7 +153,7 @@ export const RepositoryPage: React.FC = () => {
           />
         ) : (
           <Tabs
-            defaultActiveKey={currentTab}
+            activeKey={currentTab}
             onChange={(key: string) => {
               if (key === RepoPageTabs.CONFIGS || key === RepoPageTabs.RESULTS) {
                 setCurrentTab(key);
@@ -131,12 +163,12 @@ export const RepositoryPage: React.FC = () => {
             items={[
               {
                 key: RepoPageTabs.RESULTS,
-                label: 'Results',
+                label: <Space><BarChartOutlined />Results</Space>,
                 children: <RepoResultsTab repository={repoQuery.data} organization={orgQuery.data}/>
               },
               {
                 key: RepoPageTabs.CONFIGS,
-                label: 'Configs',
+                label: <Space><SettingOutlined />Settings</Space>,
                 children: <RepoConfigTab repository={repoQuery.data} organization={orgQuery.data}/>
               }
             ]}

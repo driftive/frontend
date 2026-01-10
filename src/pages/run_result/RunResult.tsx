@@ -4,10 +4,12 @@ import {
   Breadcrumb,
   Button,
   Card,
+  Col,
   Drawer,
   Empty,
   Input,
   message,
+  Row,
   Segmented,
   Skeleton,
   Space,
@@ -203,46 +205,72 @@ const RunResultPage: React.FC = () => {
         />
 
         {/* Header with title and stats */}
-        <div style={{marginBottom: 24}}>
-          <Typography.Title level={4} style={{marginBottom: 16}}>
-            Analysis Run
-          </Typography.Title>
+        <Typography.Title level={4} style={{marginBottom: 16}}>
+          Analysis Run
+        </Typography.Title>
 
-          {runQuery.isLoading ? (
-            <Space size="large" wrap>
-              <Skeleton.Input active style={{width: 100, height: 60}} />
-              <Skeleton.Input active style={{width: 100, height: 60}} />
-              <Skeleton.Input active style={{width: 100, height: 60}} />
-              <Skeleton.Input active style={{width: 120, height: 60}} />
-            </Space>
-          ) : run && (
-            <Space size="large" wrap>
-              <Statistic
-                title="Total Projects"
-                value={run.total_projects}
-                prefix={<ProjectOutlined/>}
-              />
-              <Statistic
-                title="Drifted"
-                value={run.total_projects_drifted}
-                valueStyle={{color: run.total_projects_drifted > 0 ? colors.error : colors.success}}
-                prefix={<WarningOutlined/>}
-              />
-              <Statistic
-                title="Duration"
-                value={dayjs.duration({milliseconds: run.duration_millis}).asSeconds().toFixed(1)}
-                suffix="s"
-                prefix={<ClockCircleOutlined/>}
-              />
-              <Tooltip title={dayjs(run.created_at).format('lll')}>
+        {runQuery.isLoading ? (
+          <Row gutter={[16, 16]} style={{marginBottom: 24}}>
+            {[1, 2, 3, 4].map((i) => (
+              <Col xs={24} sm={12} md={6} key={i}>
+                <Card size="small" style={{borderRadius: 8}}>
+                  <Skeleton.Input active style={{width: '100%', height: 50}} />
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        ) : run && (
+          <Row gutter={[16, 16]} style={{marginBottom: 24}}>
+            <Col xs={24} sm={12} md={6}>
+              <Card size="small" style={{borderRadius: 8, height: '100%'}}>
                 <Statistic
-                  title="Run Date"
-                  value={dayjs(run.created_at).fromNow()}
+                  title={<span style={{fontSize: 12, color: colors.textSecondary}}>Total Projects</span>}
+                  value={run.total_projects}
+                  prefix={<ProjectOutlined style={{color: colors.primary}} />}
                 />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Card
+                size="small"
+                style={{
+                  borderRadius: 8,
+                  height: '100%',
+                  borderColor: run.total_projects_drifted > 0 ? colors.error : colors.success,
+                  backgroundColor: run.total_projects_drifted > 0 ? colors.errorBg : colors.successBg,
+                }}
+              >
+                <Statistic
+                  title={<span style={{fontSize: 12, color: colors.textSecondary}}>Drifted</span>}
+                  value={run.total_projects_drifted}
+                  valueStyle={{color: run.total_projects_drifted > 0 ? colors.error : colors.success}}
+                  prefix={<WarningOutlined style={{color: run.total_projects_drifted > 0 ? colors.error : colors.success}} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Card size="small" style={{borderRadius: 8, height: '100%'}}>
+                <Statistic
+                  title={<span style={{fontSize: 12, color: colors.textSecondary}}>Duration</span>}
+                  value={dayjs.duration({milliseconds: run.duration_millis}).asSeconds().toFixed(1)}
+                  suffix="s"
+                  prefix={<ClockCircleOutlined style={{color: colors.primary}} />}
+                />
+              </Card>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <Tooltip title={dayjs(run.created_at).format('lll')}>
+                <Card size="small" style={{borderRadius: 8, height: '100%'}}>
+                  <Statistic
+                    title={<span style={{fontSize: 12, color: colors.textSecondary}}>Run Date</span>}
+                    value={dayjs(run.created_at).fromNow()}
+                    prefix={<ClockCircleOutlined style={{color: colors.primary}} />}
+                  />
+                </Card>
               </Tooltip>
-            </Space>
-          )}
-        </div>
+            </Col>
+          </Row>
+        )}
 
         {/* Filters */}
         <Space orientation="vertical" style={{width: '100%', marginBottom: 16}} size="middle">

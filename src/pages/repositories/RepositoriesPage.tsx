@@ -1,12 +1,13 @@
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 
-import {Alert, Breadcrumb, Button, Card, Empty, Flex, List, Skeleton, Spin, Tag, Typography} from "antd";
+import {Alert, Breadcrumb, Button, Card, Empty, Flex, List, Skeleton, Space, Spin, Tag, Typography} from "antd";
 import React from "react";
-import {GlobalOutlined, HomeOutlined, LockOutlined, ReloadOutlined, RightOutlined} from "@ant-design/icons";
+import {FolderOutlined, GlobalOutlined, HomeOutlined, LockOutlined, ReloadOutlined, RightOutlined} from "@ant-design/icons";
 import {useNavigate, useParams} from "react-router";
 import {useQuery} from "react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
+import {colors} from "../../theme/theme.ts";
 
 const {Title, Text} = Typography;
 
@@ -76,7 +77,14 @@ export const RepositoriesPage: React.FC = () => {
           ]}
           style={{marginBottom: 16}}
         />
-        <Title level={3}>{orgName}'s Repositories</Title>
+        <Flex justify="space-between" align="center" style={{marginBottom: 8}}>
+          <Title level={3} style={{margin: 0}}>{orgName}</Title>
+          {listReposQuery.data && listReposQuery.data.length > 0 && (
+            <Text type="secondary">
+              {listReposQuery.data.length} {listReposQuery.data.length === 1 ? 'repository' : 'repositories'}
+            </Text>
+          )}
+        </Flex>
 
         {isLoading ? (
           <Spin tip="Loading repositories...">
@@ -104,19 +112,23 @@ export const RepositoriesPage: React.FC = () => {
           />
         ) : isEmpty ? (
           <Empty
+            image={<FolderOutlined style={{fontSize: 48, color: '#bfbfbf'}} />}
             description={
-              <Text type="secondary">
-                No repositories found in this organization
-              </Text>
+              <Space orientation="vertical" size="small">
+                <Text>No repositories found</Text>
+                <Text type="secondary">
+                  This organization doesn't have any repositories yet
+                </Text>
+              </Space>
             }
-            style={{padding: '32px 0'}}
+            style={{padding: '48px 0'}}
           />
         ) : (
           <List
             itemLayout="horizontal"
-            size={"small"}
             dataSource={listReposQuery.data}
             aria-label="Repository list"
+            style={{marginTop: 16}}
             renderItem={(item) => (
               <List.Item
                 className="hoverable-list-item"
@@ -129,20 +141,39 @@ export const RepositoriesPage: React.FC = () => {
                     navigate(`/gh/${orgName}/${item.name}`)
                   }
                 }}
-                style={{cursor: "pointer", padding: '12px 16px'}}
+                style={{cursor: "pointer", padding: '14px 16px', borderRadius: 8}}
                 tabIndex={0}
                 role="button"
                 aria-label={`Open repository ${item.name}${item.is_private ? ' (private)' : ''}`}
               >
-                <List.Item.Meta
-                  avatar={item.is_private ? <LockOutlined aria-hidden="true" /> : <GlobalOutlined aria-hidden="true" />}
-                  title={<Flex justify={"space-between"}>
-                    <Flex gap="0 8px"><p>{item.name}</p>{item.is_private ? (
-                      <Tag color="default">Private</Tag>) : (<></>)}
-                    </Flex>
-                    <RightOutlined aria-hidden="true" />
-                  </Flex>}
-                />
+                <Flex justify="space-between" align="center" style={{width: '100%'}}>
+                  <Space size={12}>
+                    <div
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 8,
+                        backgroundColor: item.is_private ? '#f5f5f5' : colors.primaryLight,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {item.is_private ? (
+                        <LockOutlined style={{color: colors.textSecondary}} aria-hidden="true" />
+                      ) : (
+                        <GlobalOutlined style={{color: colors.primary}} aria-hidden="true" />
+                      )}
+                    </div>
+                    <div>
+                      <Text strong>{item.name}</Text>
+                      {item.is_private && (
+                        <Tag color="default" style={{marginLeft: 8, fontSize: 11}}>Private</Tag>
+                      )}
+                    </div>
+                  </Space>
+                  <RightOutlined style={{color: colors.textSecondary}} aria-hidden="true" />
+                </Flex>
               </List.Item>
             )}
           />

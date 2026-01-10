@@ -1,5 +1,5 @@
 import React from "react";
-import {Alert, Button, Card, Empty, Space, Statistic, Table, TableProps, Tooltip, Typography} from "antd";
+import {Alert, Button, Card, Col, Empty, Row, Space, Statistic, Table, TableProps, Tooltip, Typography} from "antd";
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -141,38 +141,62 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
 
   const stats = repoStatsQuery.data;
 
+  const hasDrift = stats?.latest_run && stats.latest_run.total_projects_drifted > 0;
+
   return (
-    <div>
+    <div style={{paddingTop: 16}}>
       {/* Summary Statistics */}
       {stats && !repoStatsQuery.isLoading && !repoStatsQuery.isError && stats.total_runs > 0 && (
-        <Card size="small" style={{marginBottom: 16, backgroundColor: '#fafafa', borderRadius: 8}}>
-          <Space size="large" wrap>
-            <Statistic
-              title="Total Runs"
-              value={stats.total_runs}
-              prefix={<HistoryOutlined />}
-            />
-            <Statistic
-              title="Runs with Drift"
-              value={stats.runs_with_drift}
-              valueStyle={{color: stats.runs_with_drift > 0 ? colors.error : colors.success}}
-              prefix={<WarningOutlined />}
-            />
-            <Tooltip title={stats.last_run_at ? dayjs(stats.last_run_at).format('lll') : ''}>
+        <Row gutter={[16, 16]} style={{marginBottom: 24}}>
+          <Col xs={24} sm={12} md={6}>
+            <Card size="small" style={{borderRadius: 8, height: '100%'}}>
               <Statistic
-                title="Last Run"
-                value={stats.last_run_at ? dayjs(stats.last_run_at).fromNow() : 'N/A'}
-                prefix={<ClockCircleOutlined />}
+                title={<span style={{fontSize: 12, color: colors.textSecondary}}>Total Runs</span>}
+                value={stats.total_runs}
+                prefix={<HistoryOutlined style={{color: colors.primary}} />}
               />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card size="small" style={{borderRadius: 8, height: '100%'}}>
+              <Statistic
+                title={<span style={{fontSize: 12, color: colors.textSecondary}}>Runs with Drift</span>}
+                value={stats.runs_with_drift}
+                valueStyle={{color: stats.runs_with_drift > 0 ? colors.error : colors.success}}
+                prefix={<WarningOutlined style={{color: stats.runs_with_drift > 0 ? colors.error : colors.success}} />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Tooltip title={stats.last_run_at ? dayjs(stats.last_run_at).format('lll') : ''}>
+              <Card size="small" style={{borderRadius: 8, height: '100%'}}>
+                <Statistic
+                  title={<span style={{fontSize: 12, color: colors.textSecondary}}>Last Run</span>}
+                  value={stats.last_run_at ? dayjs(stats.last_run_at).fromNow() : 'N/A'}
+                  prefix={<ClockCircleOutlined style={{color: colors.primary}} />}
+                />
+              </Card>
             </Tooltip>
-            <Statistic
-              title="Last Run Status"
-              value={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? `${stats.latest_run.total_projects_drifted} drifted` : 'No drift'}
-              valueStyle={{color: stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? colors.error : colors.success}}
-              prefix={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
-            />
-          </Space>
-        </Card>
+          </Col>
+          <Col xs={24} sm={12} md={6}>
+            <Card
+              size="small"
+              style={{
+                borderRadius: 8,
+                height: '100%',
+                borderColor: hasDrift ? colors.error : colors.success,
+                backgroundColor: hasDrift ? colors.errorBg : colors.successBg,
+              }}
+            >
+              <Statistic
+                title={<span style={{fontSize: 12, color: colors.textSecondary}}>Last Run Status</span>}
+                value={hasDrift ? `${stats.latest_run?.total_projects_drifted} drifted` : 'No drift'}
+                valueStyle={{color: hasDrift ? colors.error : colors.success}}
+                prefix={hasDrift ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
+              />
+            </Card>
+          </Col>
+        </Row>
       )}
 
         {repoAnalysisRuns.isError ? (
