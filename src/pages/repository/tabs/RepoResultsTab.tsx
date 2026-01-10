@@ -29,7 +29,7 @@ interface RepoAnalysisResult {
   repository_id: number;
   total_projects: number;
   total_projects_drifted: number;
-  analysis_duration_millis: number;
+  duration_millis: number;
   created_at: string;
 }
 
@@ -40,18 +40,21 @@ interface RepositoryRunStats {
   latest_run: RepoAnalysisResult | null;
 }
 
+const API_PAGE_SIZE = 25;
+
 export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, repository}) => {
 
   const navigate = useNavigate();
   const axios = useAxios();
-  const [runsPage] = React.useState(0);
-  const [pageSize, setPageSize] = React.useState(10);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   const repoAnalysisRuns = useQuery({
-    queryKey: ["getRepoAnalysisResults", repository],
+    queryKey: ["getRepoAnalysisResults", repository?.id, currentPage],
     enabled: (!!repository) && (repository.id !== undefined && repository.id !== null),
+    keepPreviousData: true,
     queryFn: async () => {
-      const response = await axios.get(`/v1/repo/${repository.id}/runs?page=${runsPage}`);
+      const apiPage = currentPage - 1;
+      const response = await axios.get(`/v1/repo/${repository.id}/runs?page=${apiPage}`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
@@ -76,6 +79,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'icon',
       title: undefined,
       dataIndex: 'total_projects_drifted',
+      width: 50,
       render: (_, item) => {
         return (<AnalysisResultIcon item={item}/>);
       }
@@ -84,13 +88,11 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'projects',
       title: 'Projects',
       dataIndex: 'total_projects',
-      sorter: (a, b) => a.total_projects - b.total_projects,
     },
     {
       key: 'drifted',
       title: 'Drifted',
       dataIndex: 'total_projects_drifted',
-      sorter: (a, b) => a.total_projects_drifted - b.total_projects_drifted,
       render: (value) => {
         return (<Typography.Text style={{color: value > 0 ? colors.error : colors.success, fontWeight: 500}}>{value}</Typography.Text>);
       }
@@ -99,7 +101,6 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'duration',
       title: 'Duration',
       dataIndex: 'duration_millis',
-      sorter: (a, b) => (a.analysis_duration_millis ?? 0) - (b.analysis_duration_millis ?? 0),
       render: (value) => {
         return (<Tooltip title={dayjs.duration({milliseconds: value}).asSeconds() + 's'}>
             {dayjs.duration({milliseconds: value}).humanize(false)}
@@ -111,10 +112,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'date',
       title: 'Date',
       dataIndex: 'created_at',
-      sorter: (a, b) => dayjs(a.created_at).unix() - dayjs(b.created_at).unix(),
-      defaultSortOrder: 'descend',
       render: (value) => {
-
         let label: string;
         let showTooltip = false;
         if (dayjs(new Date()).diff(dayjs(value), 'h') > 10) {
@@ -251,16 +249,15 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
                  dataSource={repoAnalysisRuns.data}
                  rowKey="uuid"
                  columns={columns}
-                 loading={repoAnalysisRuns.isLoading}
+                 loading={repoAnalysisRuns.isLoading || repoAnalysisRuns.isFetching}
                  pagination={{
-                   pageSize: pageSize,
-                   showSizeChanger: true,
-                   pageSizeOptions: ['10', '20', '50'],
+                   current: currentPage,
+                   pageSize: API_PAGE_SIZE,
+                   total: stats?.total_runs ?? 0,
+                   showSizeChanger: false,
                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} runs`,
-                   onChange: (_page, newPageSize) => {
-                     if (newPageSize !== pageSize) {
-                       setPageSize(newPageSize);
-                     }
+                   onChange: (page) => {
+                     setCurrentPage(page);
                    },
                  }}
           />
