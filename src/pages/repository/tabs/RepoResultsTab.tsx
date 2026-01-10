@@ -17,6 +17,7 @@ import {isOk} from "../../../utils/axios.ts";
 import {dayjs} from "../../../utils/dayjs.ts";
 import {AnalysisResultIcon} from "../../../components/AnalysisResultIcon/AnalysisResultIcon.tsx";
 import {useNavigate} from "react-router";
+import {colors} from "../../../theme/theme.ts";
 
 export interface RepoResultsTabProps {
   organization: GitOrganization;
@@ -91,7 +92,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       dataIndex: 'total_projects_drifted',
       sorter: (a, b) => a.total_projects_drifted - b.total_projects_drifted,
       render: (value) => {
-        return (<Typography.Text type={value > 0 ? 'danger' : 'success'}>{value}</Typography.Text>);
+        return (<Typography.Text style={{color: value > 0 ? colors.error : colors.success, fontWeight: 500}}>{value}</Typography.Text>);
       }
     },
     {
@@ -154,7 +155,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
             <Statistic
               title="Runs with Drift"
               value={stats.runs_with_drift}
-              valueStyle={{color: stats.runs_with_drift > 0 ? '#cf1322' : '#3f8600'}}
+              valueStyle={{color: stats.runs_with_drift > 0 ? colors.error : colors.success}}
               prefix={<WarningOutlined />}
             />
             <Tooltip title={stats.last_run_at ? dayjs(stats.last_run_at).format('lll') : ''}>
@@ -167,7 +168,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
             <Statistic
               title="Last Run Status"
               value={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? `${stats.latest_run.total_projects_drifted} drifted` : 'No drift'}
-              valueStyle={{color: stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? '#cf1322' : '#3f8600'}}
+              valueStyle={{color: stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? colors.error : colors.success}}
               prefix={stats.latest_run && stats.latest_run.total_projects_drifted > 0 ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
             />
           </Space>
@@ -205,6 +206,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
           />
         ) : (
           <Table size="small"
+                 rowClassName="clickable-row"
                  onRow={(record) => {
                    return {
                      "onClick": () => {

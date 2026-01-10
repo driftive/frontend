@@ -3,6 +3,7 @@ import {Avatar, Button, Dropdown, Layout, Space, Typography} from 'antd';
 import {GithubOutlined, LogoutOutlined, UserOutlined} from '@ant-design/icons';
 import {Link, useNavigate} from 'react-router';
 import {AuthDispatchContext, AuthStateContext} from '../../context/auth/context';
+import {colors} from '../../theme/theme';
 
 const {Header} = Layout;
 
@@ -49,7 +50,7 @@ export const AppHeader: React.FC = () => {
               width: 36,
               height: 36,
               borderRadius: 8,
-              background: 'linear-gradient(135deg, #1890ff 0%, #36cfc9 100%)',
+              background: `linear-gradient(135deg, ${colors.primary} 0%, #14b8a6 100%)`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -64,7 +65,7 @@ export const AppHeader: React.FC = () => {
           </div>
           <Typography.Title
             level={4}
-            style={{margin: 0, color: '#1a1a1a', fontWeight: 600}}
+            style={{margin: 0, color: colors.text, fontWeight: 600}}
           >
             Driftive
           </Typography.Title>
@@ -83,7 +84,7 @@ export const AppHeader: React.FC = () => {
           <Dropdown menu={{items: userMenuItems}} placement="bottomRight">
             <Avatar
               style={{
-                backgroundColor: '#1890ff',
+                backgroundColor: colors.primary,
                 cursor: 'pointer',
               }}
               icon={<UserOutlined />}

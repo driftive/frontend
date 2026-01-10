@@ -36,6 +36,7 @@ import {
   WarningOutlined
 } from "@ant-design/icons";
 import {dayjs} from "../../utils/dayjs.ts";
+import {colors} from "../../theme/theme.ts";
 
 interface ProjectAnalysisRun {
   id: number;
@@ -135,12 +136,12 @@ const RunResultPage: React.FC = () => {
 
   const getProjectStatus = (project: ProjectAnalysisRun) => {
     if (!project.succeeded) {
-      return {tag: <Tag icon={<ExclamationCircleOutlined/>} color="error">Error</Tag>, label: 'Error'};
+      return {tag: <Tag icon={<ExclamationCircleOutlined/>} color={colors.error}>Error</Tag>, label: 'Error'};
     }
     if (project.drifted) {
-      return {tag: <Tag icon={<WarningOutlined/>} color="warning">Drifted</Tag>, label: 'Drifted'};
+      return {tag: <Tag icon={<WarningOutlined/>} color={colors.warning}>Drifted</Tag>, label: 'Drifted'};
     }
-    return {tag: <Tag icon={<CheckCircleOutlined/>} color="success">OK</Tag>, label: 'OK'};
+    return {tag: <Tag icon={<CheckCircleOutlined/>} color={colors.success}>OK</Tag>, label: 'OK'};
   };
 
   const columns = [
@@ -188,13 +189,8 @@ const RunResultPage: React.FC = () => {
   return (
     <PageContainer>
       <Card
-        style={{
-          width: '90%',
-          maxWidth: '1400px',
-          margin: '0 auto',
-          borderRadius: 8,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-        }}
+        style={{borderRadius: 12}}
+        styles={{body: {padding: 32}}}
       >
         {/* Breadcrumb */}
         <Breadcrumb
@@ -229,7 +225,7 @@ const RunResultPage: React.FC = () => {
               <Statistic
                 title="Drifted"
                 value={run.total_projects_drifted}
-                valueStyle={{color: run.total_projects_drifted > 0 ? '#cf1322' : '#3f8600'}}
+                valueStyle={{color: run.total_projects_drifted > 0 ? colors.error : colors.success}}
                 prefix={<WarningOutlined/>}
               />
               <Statistic
@@ -311,6 +307,7 @@ const RunResultPage: React.FC = () => {
               pageSizeOptions: ['10', '20', '50', '100'],
               showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} projects`,
             }}
+            rowClassName="clickable-row"
             onRow={(record) => ({
               onClick: () => openProjectDrawer(record),
               onKeyDown: (e) => {

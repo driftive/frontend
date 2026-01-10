@@ -119,6 +119,7 @@ export const RepositoriesPage: React.FC = () => {
             aria-label="Repository list"
             renderItem={(item) => (
               <List.Item
+                className="hoverable-list-item"
                 onClick={() => {
                   navigate(`/gh/${orgName}/${item.name}`)
                 }}
@@ -128,7 +129,7 @@ export const RepositoriesPage: React.FC = () => {
                     navigate(`/gh/${orgName}/${item.name}`)
                   }
                 }}
-                style={{cursor: "pointer"}}
+                style={{cursor: "pointer", padding: '12px 16px'}}
                 tabIndex={0}
                 role="button"
                 aria-label={`Open repository ${item.name}${item.is_private ? ' (private)' : ''}`}

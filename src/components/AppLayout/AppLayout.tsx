@@ -2,6 +2,7 @@ import React from 'react';
 import {Layout} from 'antd';
 import {AppHeader} from '../AppHeader/AppHeader';
 import {Outlet} from 'react-router';
+import {colors} from '../../theme/theme';
 
 const {Content} = Layout;
 
@@ -11,7 +12,7 @@ export const AppLayout: React.FC = () => {
       <AppHeader />
       <Content
         style={{
-          background: '#f5f7fa',
+          background: colors.background,
           padding: '32px 24px',
         }}
       >
