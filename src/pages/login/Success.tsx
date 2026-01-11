@@ -18,7 +18,9 @@ export const LoginSuccessPage = () => {
         type: 'LOGIN', token
       });
       if (!APP_DEBUG) {
-        navigate('/gh/orgs');
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/gh/orgs';
+        sessionStorage.removeItem('redirectAfterLogin');
+        navigate(redirectPath, {replace: true});
       }
     }
   }, [authDispatch, navigate, token]);
@@ -26,6 +28,12 @@ export const LoginSuccessPage = () => {
   if (APP_DEBUG) {
 
     const decodedToken = token && JSON.parse(atob(token.split('.')[1]));
+
+    const handleContinue = () => {
+      const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/gh/orgs';
+      sessionStorage.removeItem('redirectAfterLogin');
+      navigate(redirectPath, {replace: true});
+    };
 
     return (
       <div>
@@ -38,7 +46,7 @@ export const LoginSuccessPage = () => {
             <pre>{JSON.stringify(decodedToken)}</pre>
           </div>)
         }
-        <Button onClick={() => navigate('/gh/orgs')}>Continue</Button>
+        <Button onClick={handleContinue}>Continue</Button>
       </div>)
   }
 

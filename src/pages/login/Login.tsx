@@ -4,12 +4,18 @@ import {GithubOutlined} from "@ant-design/icons";
 import {API_URL} from "../../configs.ts";
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 import {Flex, Typography} from "antd";
+import {useLocation} from "react-router";
 
 const {Title} = Typography;
 
 export const LoginPage: React.FC = () => {
+  const location = useLocation();
 
   const handleLogin = () => {
+    const from = location.state?.from?.pathname;
+    if (from) {
+      sessionStorage.setItem('redirectAfterLogin', from);
+    }
     window.location.href = `${API_URL}/v1/auth/github`;
   };
 
