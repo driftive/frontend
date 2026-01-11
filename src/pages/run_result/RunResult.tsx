@@ -66,9 +66,10 @@ type StatusFilter = 'all' | 'drifted' | 'errored' | 'ok';
 
 const RunResultPage: React.FC = () => {
   const [searchText, setSearchText] = React.useState('');
-  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('drifted');
+  const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all');
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [selectedProject, setSelectedProject] = React.useState<ProjectAnalysisRun | null>(null);
+  const hasInitializedFilter = React.useRef(false);
 
   const axios = useAxios();
   const {org: orgName, repo: repoName, run: runUuid} = useParams();
@@ -86,6 +87,17 @@ const RunResultPage: React.FC = () => {
   });
 
   const run = runQuery.data;
+
+  // Set default filter to 'drifted' only if there are drifted projects (on initial load)
+  React.useEffect(() => {
+    if (run && !hasInitializedFilter.current) {
+      hasInitializedFilter.current = true;
+      const driftedCount = run.projects?.filter(p => p.drifted && p.succeeded).length ?? 0;
+      if (driftedCount > 0) {
+        setStatusFilter('drifted');
+      }
+    }
+  }, [run]);
   const allProjects = run?.projects ?? [];
 
   // Filter projects based on search text and status filter
