@@ -3,16 +3,18 @@ import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
 import {Alert, Breadcrumb, Button, Card, Flex, Skeleton, Space, Spin, Tabs, Typography} from "antd";
 import React from "react";
 import {useNavigate, useParams, useSearchParams} from "react-router";
-import {BarChartOutlined, GithubOutlined, HomeOutlined, ReloadOutlined, SettingOutlined} from "@ant-design/icons";
+import {BarChartOutlined, GithubOutlined, HomeOutlined, LineChartOutlined, ReloadOutlined, SettingOutlined} from "@ant-design/icons";
 import {useQuery} from "@tanstack/react-query";
 import {isOk} from "../../utils/axios.ts";
 import useAxios from "../../context/auth/axios.ts";
 import {RepoConfigTab} from "./tabs/RepoConfigTab.tsx";
 import {RepoResultsTab} from "./tabs/RepoResultsTab.tsx";
+import {RepoTrendsTab} from "./tabs/RepoTrendsTab.tsx";
 import {colors} from "../../theme/theme.ts";
 
 enum RepoPageTabs {
   RESULTS = 'results',
+  TRENDS = 'trends',
   CONFIGS = 'configs',
 }
 
@@ -155,7 +157,7 @@ export const RepositoryPage: React.FC = () => {
           <Tabs
             activeKey={currentTab}
             onChange={(key: string) => {
-              if (key === RepoPageTabs.CONFIGS || key === RepoPageTabs.RESULTS) {
+              if (key === RepoPageTabs.CONFIGS || key === RepoPageTabs.RESULTS || key === RepoPageTabs.TRENDS) {
                 setCurrentTab(key);
                 updateUrlTab(key);
               }
@@ -165,6 +167,11 @@ export const RepositoryPage: React.FC = () => {
                 key: RepoPageTabs.RESULTS,
                 label: <Space><BarChartOutlined />Results</Space>,
                 children: <RepoResultsTab repository={repoQuery.data} organization={orgQuery.data}/>
+              },
+              {
+                key: RepoPageTabs.TRENDS,
+                label: <Space><LineChartOutlined />Trends</Space>,
+                children: <RepoTrendsTab repository={repoQuery.data} organization={orgQuery.data}/>
               },
               {
                 key: RepoPageTabs.CONFIGS,
