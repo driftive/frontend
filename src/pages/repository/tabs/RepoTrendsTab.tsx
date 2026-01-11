@@ -1,5 +1,5 @@
 import React from "react";
-import {Alert, Button, Card, Col, Empty, Row, Select, Space, Spin, Statistic, Table, TableProps, Typography} from "antd";
+import {Alert, Button, Card, Col, Empty, Row, Select, Space, Spin, Statistic, Table, TableProps, Tooltip, Typography} from "antd";
 import {
   BarChartOutlined,
   ClockCircleOutlined,
@@ -58,38 +58,48 @@ export const RepoTrendsTab: React.FC<RepoTrendsTabProps> = ({repository}) => {
       key: "dir",
       title: "Project",
       dataIndex: "dir",
+      ellipsis: true,
       render: (dir: string) => (
-        <Space>
-          <FolderOutlined style={{color: colors.primary}}/>
-          <Typography.Text code style={{fontSize: 12}}>
-            {dir}
-          </Typography.Text>
-        </Space>
+        <Tooltip title={dir} placement="topLeft">
+          <Space>
+            <FolderOutlined style={{color: colors.primary}}/>
+            <span style={{fontSize: 12}}>{dir}</span>
+          </Space>
+        </Tooltip>
       ),
     },
     {
       key: "type",
       title: "Type",
       dataIndex: "type",
-      width: 100,
+      width: 60,
+      align: "center",
+      render: (type: string) => {
+        const abbrev = type === "TERRAFORM" ? "TF" : type === "TERRAGRUNT" ? "TG" : type === "TOFU" ? "OT" : type;
+        const full = type === "TOFU" ? "OpenTofu" : type.charAt(0) + type.slice(1).toLowerCase();
+        return (
+          <Tooltip title={full}>
+            <Typography.Text type="secondary" style={{fontSize: 12}}>{abbrev}</Typography.Text>
+          </Tooltip>
+        );
+      },
     },
     {
       key: "drift_count",
-      title: "Drift Count",
+      title: "Drifts",
       dataIndex: "drift_count",
       width: 100,
-      render: (count: number) => (
-        <Typography.Text style={{color: colors.error, fontWeight: 500}}>
-          {count}
-        </Typography.Text>
+      align: "right",
+      render: (_: number, record: FrequentlyDriftedProject) => (
+        <Tooltip title={`Drifted ${record.drift_count} times out of ${record.total_appearances} runs (${record.drift_percentage.toFixed(0)}%)`}>
+          <span>
+            <Typography.Text style={{color: colors.error, fontWeight: 500}}>
+              {record.drift_count}
+            </Typography.Text>
+            <Typography.Text type="secondary" style={{fontSize: 12}}> ({record.drift_percentage.toFixed(0)}%)</Typography.Text>
+          </span>
+        </Tooltip>
       ),
-    },
-    {
-      key: "drift_percentage",
-      title: "Drift Rate",
-      dataIndex: "drift_percentage",
-      width: 100,
-      render: (pct: number) => `${pct.toFixed(1)}%`,
     },
   ];
 
@@ -285,7 +295,6 @@ export const RepoTrendsTab: React.FC<RepoTrendsTabProps> = ({repository}) => {
                 columns={frequentlyDriftedColumns}
                 rowKey="dir"
                 pagination={false}
-                scroll={{x: true}}
               />
             ) : (
               <Empty description="No frequently drifted projects"/>
