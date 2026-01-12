@@ -1,4 +1,4 @@
-import {Navigate, Route, Routes} from "react-router";
+import {Route, Routes} from "react-router";
 import {LoginPage} from "./pages/login/Login.tsx";
 import {LoginSuccessPage} from "./pages/login/Success.tsx";
 import {OrganizationsPage} from "./pages/organizations/OrganizationsPage.tsx";
@@ -7,11 +7,12 @@ import {RepositoriesPage} from "./pages/repositories/RepositoriesPage.tsx";
 import {RepositoryPage} from "./pages/repository/RepositoryPage.tsx";
 import {AppLayout} from "./components/AppLayout/AppLayout.tsx";
 import {ProtectedRoute} from "./components/ProtectedRoute/ProtectedRoute.tsx";
+import {RootRedirect} from "./components/RootRedirect/RootRedirect.tsx";
 
 export const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage/>}/>
       <Route path="/login/success" element={<LoginSuccessPage/>}/>
 
