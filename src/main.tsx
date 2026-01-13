@@ -5,6 +5,7 @@ import './index.css'
 import {BrowserRouter} from 'react-router';
 import {AppRoutes} from "./routes.tsx";
 import {AuthProvider} from "./context/auth/provider.tsx";
+import {MaybePostHog} from "./context/posthog";
 import {QueryClientProvider} from "@tanstack/react-query";
 import {queryClient} from "./api.ts";
 import {theme} from "./theme/theme.ts";
@@ -13,11 +14,13 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ConfigProvider theme={theme}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <AuthProvider>
-            <AppRoutes/>
-          </AuthProvider>
-        </BrowserRouter>
+        <MaybePostHog>
+          <BrowserRouter>
+            <AuthProvider>
+              <AppRoutes/>
+            </AuthProvider>
+          </BrowserRouter>
+        </MaybePostHog>
       </QueryClientProvider>
     </ConfigProvider>
   </StrictMode>,
