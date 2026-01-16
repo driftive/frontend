@@ -1,5 +1,5 @@
 import React from "react";
-import {Alert, Button, Card, Col, Empty, Row, Space, Statistic, Table, TableProps, Tooltip, Typography} from "antd";
+import {Alert, Button, Card, Col, Empty, Row, Space, Statistic, Table, TableProps, Tag, Tooltip, Typography} from "antd";
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -96,18 +96,23 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       render: (_, item) => {
         const hasDrift = item.total_projects_drifted > 0;
         const hasErrors = item.total_projects_errored > 0;
+
+        if (!hasDrift && !hasErrors) {
+          return <Tag icon={<CheckCircleOutlined />} color={colors.success}>OK</Tag>;
+        }
+
         return (
-          <Space size="small">
-            <Tooltip title="Drifted projects">
-              <Typography.Text style={{color: hasDrift ? colors.warning : colors.success, fontWeight: 500}}>
-                <WarningOutlined style={{marginRight: 4}} />{item.total_projects_drifted}
-              </Typography.Text>
-            </Tooltip>
-            <Tooltip title="Errored projects">
-              <Typography.Text style={{color: hasErrors ? colors.error : colors.success, fontWeight: 500}}>
-                <ExclamationCircleOutlined style={{marginRight: 4}} />{item.total_projects_errored}
-              </Typography.Text>
-            </Tooltip>
+          <Space size={4}>
+            {hasErrors && (
+              <Tag icon={<ExclamationCircleOutlined />} color={colors.error}>
+                {item.total_projects_errored} errored
+              </Tag>
+            )}
+            {hasDrift && (
+              <Tag icon={<WarningOutlined />} color={colors.warning}>
+                {item.total_projects_drifted} drifted
+              </Tag>
+            )}
           </Space>
         );
       }
