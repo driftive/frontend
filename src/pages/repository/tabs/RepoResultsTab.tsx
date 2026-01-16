@@ -29,6 +29,7 @@ interface RepoAnalysisResult {
   repository_id: number;
   total_projects: number;
   total_projects_drifted: number;
+  total_projects_errored: number;
   duration_millis: number;
   created_at: string;
 }
@@ -90,11 +91,25 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       dataIndex: 'total_projects',
     },
     {
-      key: 'drifted',
-      title: 'Drifted',
-      dataIndex: 'total_projects_drifted',
-      render: (value) => {
-        return (<Typography.Text style={{color: value > 0 ? colors.error : colors.success, fontWeight: 500}}>{value}</Typography.Text>);
+      key: 'status',
+      title: 'Status',
+      render: (_, item) => {
+        const hasDrift = item.total_projects_drifted > 0;
+        const hasErrors = item.total_projects_errored > 0;
+        return (
+          <Space size="small">
+            <Tooltip title="Drifted projects">
+              <Typography.Text style={{color: hasDrift ? colors.warning : colors.success, fontWeight: 500}}>
+                <WarningOutlined style={{marginRight: 4}} />{item.total_projects_drifted}
+              </Typography.Text>
+            </Tooltip>
+            <Tooltip title="Errored projects">
+              <Typography.Text style={{color: hasErrors ? colors.error : colors.success, fontWeight: 500}}>
+                <ExclamationCircleOutlined style={{marginRight: 4}} />{item.total_projects_errored}
+              </Typography.Text>
+            </Tooltip>
+          </Space>
+        );
       }
     },
     {
