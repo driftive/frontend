@@ -88,14 +88,19 @@ const RunResultPage: React.FC = () => {
 
   const run = runQuery.data;
 
-  // Set default filter to 'drifted' only if there are drifted projects (on initial load)
+  // Set default filter based on priority: drifted > errored > all (on initial load)
   React.useEffect(() => {
     if (run && !hasInitializedFilter.current) {
       hasInitializedFilter.current = true;
       const driftedCount = run.projects?.filter(p => p.drifted && p.succeeded).length ?? 0;
+      const erroredCount = run.projects?.filter(p => !p.succeeded).length ?? 0;
+
       if (driftedCount > 0) {
         setStatusFilter('drifted');
+      } else if (erroredCount > 0) {
+        setStatusFilter('errored');
       }
+      // If no drifted or errored projects, keep the default 'all' filter
     }
   }, [run]);
   const allProjects = run?.projects ?? [];
@@ -175,6 +180,7 @@ const RunResultPage: React.FC = () => {
       title: 'Status',
       key: 'status',
       width: 120,
+      defaultSortOrder: 'ascend' as const,
       sorter: (a: ProjectAnalysisRun, b: ProjectAnalysisRun) => {
         const getStatusOrder = (p: ProjectAnalysisRun) => {
           if (!p.succeeded) return 0; // Error first
