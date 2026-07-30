@@ -7,6 +7,7 @@ import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import useAxios from "../../../context/auth/axios.ts";
 import {isOk} from "../../../utils/axios.ts";
 import {useNavigate} from "react-router";
+import {useProvider} from "../../../utils/provider.ts";
 
 const {Title, Paragraph, Text} = Typography;
 
@@ -19,6 +20,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
   const axios = useAxios();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const provider = useProvider();
 
   const [isEraseModalOpen, setIsEraseModalOpen] = React.useState(false);
   const [eraseConfirmText, setEraseConfirmText] = React.useState('');
@@ -65,7 +67,7 @@ export const RepoConfigTab: React.FC<RepoConfigTabProps> = ({organization, repos
     onSuccess: () => {
       message.success('Repository data erased successfully');
       queryClient.invalidateQueries({queryKey: ["listOrgRepos"]});
-      navigate(`/gh/${organization.name}`);
+      navigate(`/${provider}/${organization.name}`);
     },
     onError: () => {
       message.error('Failed to erase repository data');

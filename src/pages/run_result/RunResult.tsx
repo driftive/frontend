@@ -44,33 +44,7 @@ import {
 } from "@ant-design/icons";
 import {dayjs} from "../../utils/dayjs.ts";
 import {colors} from "../../theme/theme.ts";
-
-interface ProjectAnalysisRun {
-  id: number;
-  run_id: string;
-  dir: string;
-  type: string;
-  drifted: boolean;
-  succeeded: boolean;
-  init_output: string;
-  plan_output: string;
-  skipped_due_to_pr: boolean;
-  resources_added?: number | null;
-  resources_changed?: number | null;
-  resources_destroyed?: number | null;
-}
-
-interface AnalysisRun {
-  uuid: string;
-  repository_id: number;
-  total_projects: number;
-  total_projects_drifted: number;
-  total_projects_skipped: number;
-  duration_millis: number;
-  created_at: string;
-  updated_at: string;
-  projects: ProjectAnalysisRun[];
-}
+import {AnalysisRunWithProjects, ProjectAnalysisRun} from "../../model/AnalysisRun.ts";
 
 type StatusFilter = 'all' | 'drifted' | 'errored' | 'skipped' | 'ok';
 
@@ -117,7 +91,7 @@ const RunResultPage: React.FC = () => {
     queryKey: ["getRun", runUuid],
     enabled: !!runUuid,
     queryFn: async () => {
-      const response = await axios.get<AnalysisRun>(`/v1/analysis/run/${runUuid}`);
+      const response = await axios.get<AnalysisRunWithProjects>(`/v1/analysis/run/${runUuid}`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
@@ -392,15 +366,15 @@ const RunResultPage: React.FC = () => {
                 style={{
                   borderRadius: 8,
                   height: '100%',
-                  borderColor: counts.errored > 0 ? colors.error : colors.border,
-                  backgroundColor: counts.errored > 0 ? colors.errorBg : colors.cardBg,
+                  borderColor: run.total_projects_errored > 0 ? colors.error : colors.border,
+                  backgroundColor: run.total_projects_errored > 0 ? colors.errorBg : colors.cardBg,
                 }}
               >
                 <Statistic
                   title={<span style={{fontSize: 12, color: colors.textSecondary}}>Errored</span>}
-                  value={counts.errored}
-                  valueStyle={{color: counts.errored > 0 ? colors.error : colors.text}}
-                  prefix={<ExclamationCircleOutlined style={{color: counts.errored > 0 ? colors.error : colors.textSecondary}} />}
+                  value={run.total_projects_errored}
+                  valueStyle={{color: run.total_projects_errored > 0 ? colors.error : colors.text}}
+                  prefix={<ExclamationCircleOutlined style={{color: run.total_projects_errored > 0 ? colors.error : colors.textSecondary}} />}
                 />
               </Card>
             </Col>
@@ -408,7 +382,7 @@ const RunResultPage: React.FC = () => {
               <Card size="small" style={{borderRadius: 8, height: '100%'}}>
                 <Statistic
                   title={<span style={{fontSize: 12, color: colors.textSecondary}}>Skipped</span>}
-                  value={counts.skipped}
+                  value={run.total_projects_skipped}
                   prefix={<PauseCircleOutlined style={{color: colors.primary}} />}
                 />
               </Card>

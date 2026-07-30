@@ -4,6 +4,7 @@ import {GithubOutlined, LogoutOutlined, UserOutlined} from '@ant-design/icons';
 import {Link, useNavigate} from 'react-router';
 import {AuthDispatchContext, AuthStateContext} from '../../context/auth/context';
 import {colors} from '../../theme/theme';
+import {useProvider} from '../../utils/provider';
 
 const {Header} = Layout;
 
@@ -11,6 +12,7 @@ export const AppHeader: React.FC = () => {
   const authState = useContext(AuthStateContext);
   const dispatch = useContext(AuthDispatchContext);
   const navigate = useNavigate();
+  const provider = useProvider();
 
   const handleLogout = () => {
     dispatch?.({type: 'LOGOUT'});
@@ -43,7 +45,7 @@ export const AppHeader: React.FC = () => {
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
       }}
     >
-      <Link to="/gh/orgs" style={{textDecoration: 'none'}}>
+      <Link to={`/${provider}/orgs`} style={{textDecoration: 'none'}}>
         <Space align="center" size={12}>
           <div
             style={{

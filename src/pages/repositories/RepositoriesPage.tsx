@@ -22,7 +22,7 @@ export const RepositoriesPage: React.FC = () => {
 
   const axios = useAxios();
   const navigate = useNavigate();
-  const {org: orgName} = useParams();
+  const {provider, org: orgName} = useParams();
 
   const orgQuery = useQuery({
     queryKey: ["getOrgByName", orgName],
@@ -37,7 +37,7 @@ export const RepositoriesPage: React.FC = () => {
   });
 
   const listReposQuery = useQuery({
-    queryKey: ["listOrgRepos"],
+    queryKey: ["listOrgRepos", orgQuery.data?.id],
     enabled: (!!orgQuery.data) && (orgQuery.data.id !== undefined),
     queryFn: async () => {
       const response = await axios.get<RepositoryDTO[]>(`/v1/org/${orgQuery.data.id}/repos`);
@@ -69,7 +69,7 @@ export const RepositoriesPage: React.FC = () => {
         <Breadcrumb
           items={[
             {
-              href: '/gh/orgs',
+              href: `/${provider}/orgs`,
               title: <><HomeOutlined /> Organizations</>,
             },
             {
@@ -134,12 +134,12 @@ export const RepositoriesPage: React.FC = () => {
               <List.Item
                 className="hoverable-list-item"
                 onClick={() => {
-                  navigate(`/gh/${orgName}/${item.name}`)
+                  navigate(`/${provider}/${orgName}/${item.name}`)
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
-                    navigate(`/gh/${orgName}/${item.name}`)
+                    navigate(`/${provider}/${orgName}/${item.name}`)
                   }
                 }}
                 style={{cursor: "pointer", padding: '14px 16px', borderRadius: 8}}
