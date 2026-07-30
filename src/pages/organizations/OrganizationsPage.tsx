@@ -5,7 +5,7 @@ import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";
 import MainOrgSelect from "../../components/MainOrgSelect/MainOrgSelect.tsx";
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
-import {useNavigate} from "react-router";
+import {useNavigate, useParams} from "react-router";
 import {GITHUB_INSTALLATION_URL} from "../../configs.ts";
 import {GithubOutlined, ReloadOutlined, SyncOutlined} from "@ant-design/icons";
 
@@ -21,6 +21,7 @@ interface OrganizationDTO {
 export const OrganizationsPage: React.FC = () => {
   const axios = useAxios();
   const navigate = useNavigate();
+  const {provider} = useParams();
 
   const [isGithubSyncModalOpen, setIsGithubSyncModalOpen] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
@@ -133,7 +134,7 @@ export const OrganizationsPage: React.FC = () => {
                   return;
                 }
                 if (value.installed) {
-                  navigate(`/gh/${value.label}`)
+                  navigate(`/${provider}/${value.label}`)
                 }
               }}
               options={

@@ -18,29 +18,13 @@ import {isOk} from "../../../utils/axios.ts";
 import {dayjs} from "../../../utils/dayjs.ts";
 import {AnalysisResultIcon} from "../../../components/AnalysisResultIcon/AnalysisResultIcon.tsx";
 import {useNavigate} from "react-router";
+import {useProvider} from "../../../utils/provider.ts";
 import {colors} from "../../../theme/theme.ts";
+import {AnalysisRun, RepositoryRunStats} from "../../../model/AnalysisRun.ts";
 
 export interface RepoResultsTabProps {
   organization: GitOrganization;
   repository: GitRepository;
-}
-
-interface RepoAnalysisResult {
-  uuid: string;
-  repository_id: number;
-  total_projects: number;
-  total_projects_drifted: number;
-  total_projects_errored: number;
-  total_projects_skipped: number;
-  duration_millis: number;
-  created_at: string;
-}
-
-interface RepositoryRunStats {
-  total_runs: number;
-  runs_with_drift: number;
-  last_run_at: string | null;
-  latest_run: RepoAnalysisResult | null;
 }
 
 const API_PAGE_SIZE = 25;
@@ -48,6 +32,7 @@ const API_PAGE_SIZE = 25;
 export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, repository}) => {
 
   const navigate = useNavigate();
+  const provider = useProvider();
   const axios = useAxios();
   const [currentPage, setCurrentPage] = React.useState(1);
 
@@ -77,7 +62,7 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
     },
   });
 
-  const columns: TableProps<RepoAnalysisResult>['columns'] = [
+  const columns: TableProps<AnalysisRun>['columns'] = [
     {
       key: 'icon',
       title: undefined,
@@ -260,12 +245,12 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
                  onRow={(record) => {
                    return {
                      "onClick": () => {
-                       navigate(`/gh/${organization.name}/${repository.name}/run/${record.uuid}`);
+                       navigate(`/${provider}/${organization.name}/${repository.name}/run/${record.uuid}`);
                      },
                      "onKeyDown": (e) => {
                        if (e.key === 'Enter' || e.key === ' ') {
                          e.preventDefault();
-                         navigate(`/gh/${organization.name}/${repository.name}/run/${record.uuid}`);
+                         navigate(`/${provider}/${organization.name}/${repository.name}/run/${record.uuid}`);
                        }
                      },
                      "style": {cursor: 'pointer'},

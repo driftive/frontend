@@ -34,14 +34,14 @@ enum RepoPageTabs {
 export const RepositoryPage: React.FC = () => {
 
   const axios = useAxios();
-  const {org: orgName, repo: repoName} = useParams();
+  const {provider, org: orgName, repo: repoName} = useParams();
   const [searchParams] = useSearchParams();
 
   const currentTab = searchParams.get('tab') || RepoPageTabs.RESULTS;
   const navigate = useNavigate();
 
   const updateUrlTab = (tab: string) => {
-    navigate(`/gh/${orgName}/${repoName}?tab=${tab}`, {
+    navigate(`/${provider}/${orgName}/${repoName}?tab=${tab}`, {
       replace: true,
     });
   };
@@ -59,7 +59,7 @@ export const RepositoryPage: React.FC = () => {
   });
 
   const repoQuery = useQuery({
-    queryKey: ["getRepoByOrgIdAndName", orgName],
+    queryKey: ["getRepoByOrgIdAndName", orgQuery.data?.id, repoName],
     enabled: (!!repoName) && (!!orgQuery.data) && (orgQuery.data.id !== undefined),
     queryFn: async () => {
       const response = await axios.get(`/v1/org/${orgQuery.data.id}/repo?repo_name=${repoName}`);
@@ -90,11 +90,11 @@ export const RepositoryPage: React.FC = () => {
         <Breadcrumb
           items={[
             {
-              href: '/gh/orgs',
+              href: `/${provider}/orgs`,
               title: <><HomeOutlined /> Organizations</>,
             },
             {
-              href: `/gh/${orgName}`,
+              href: `/${provider}/${orgName}`,
               title: orgName,
             },
             {

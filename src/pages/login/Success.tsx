@@ -3,6 +3,7 @@ import {useAuthDispatch} from "../../context/auth/hook.ts";
 import {APP_DEBUG} from "../../configs.ts";
 import React from "react";
 import Button from "antd/es/button";
+import {DEFAULT_PROVIDER} from "../../utils/provider.ts";
 
 export const LoginSuccessPage = () => {
 
@@ -18,7 +19,7 @@ export const LoginSuccessPage = () => {
         type: 'LOGIN', token
       });
       if (!APP_DEBUG) {
-        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/gh/orgs';
+        const redirectPath = sessionStorage.getItem('redirectAfterLogin') || `/${DEFAULT_PROVIDER}/orgs`;
         sessionStorage.removeItem('redirectAfterLogin');
         navigate(redirectPath, {replace: true});
       }
@@ -30,7 +31,7 @@ export const LoginSuccessPage = () => {
     const decodedToken = token && JSON.parse(atob(token.split('.')[1]));
 
     const handleContinue = () => {
-      const redirectPath = sessionStorage.getItem('redirectAfterLogin') || '/gh/orgs';
+      const redirectPath = sessionStorage.getItem('redirectAfterLogin') || `/${DEFAULT_PROVIDER}/orgs`;
       sessionStorage.removeItem('redirectAfterLogin');
       navigate(redirectPath, {replace: true});
     };
