@@ -16,6 +16,10 @@ export interface ProjectAnalysisRun {
   resources_destroyed?: number | null;
 }
 
+// RUNNING is an in-flight scan reporting live progress; COMPLETED is the terminal state. There is
+// no third state — the API deletes runs left RUNNING for more than 15 minutes.
+export type RunStatus = 'RUNNING' | 'COMPLETED';
+
 export interface AnalysisRun {
   uuid: string;
   repository_id: number;
@@ -24,11 +28,14 @@ export interface AnalysisRun {
   total_projects_errored: number;
   total_projects_skipped: number;
   duration_millis: number;
+  status: RunStatus;
   created_at: string;
   updated_at: string;
 }
 
 export interface AnalysisRunWithProjects extends AnalysisRun {
+  // Dirs currently being analyzed. Only ever populated while status is RUNNING.
+  running_projects: string[];
   projects: ProjectAnalysisRun[];
 }
 

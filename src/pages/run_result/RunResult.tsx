@@ -9,6 +9,7 @@ import {
   Empty,
   Input,
   message,
+  Progress,
   Row,
   Segmented,
   Skeleton,
@@ -22,7 +23,8 @@ import {
 import {Prism as SyntaxHighlighter} from 'react-syntax-highlighter';
 import {dracula} from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {useQuery} from "@tanstack/react-query";
-import {Link, useParams, useSearchParams} from "react-router";
+import {isAxiosError} from "axios";
+import {Link, useNavigate, useParams, useSearchParams} from "react-router";
 import useAxios from "../../context/auth/axios.ts";
 import {isOk} from "../../utils/axios.ts";
 import {PageContainer} from "../../components/PageWrapper/PageWrapper.tsx";
@@ -40,13 +42,21 @@ import {
   ReloadOutlined,
   RightOutlined,
   SearchOutlined,
+  SyncOutlined,
   WarningOutlined
 } from "@ant-design/icons";
 import {dayjs} from "../../utils/dayjs.ts";
 import {colors} from "../../theme/theme.ts";
 import {AnalysisRunWithProjects, ProjectAnalysisRun} from "../../model/AnalysisRun.ts";
-
-type StatusFilter = 'all' | 'drifted' | 'errored' | 'skipped' | 'ok';
+import {
+  defaultStatusFilter,
+  elapsedMillis,
+  isRunLive,
+  isRunStale,
+  pollInterval,
+  scanProgress,
+  StatusFilter
+} from "./runStatus.ts";
 
 const diffLineStyle = (line: string): React.CSSProperties | undefined => {
   const t = line.trimStart();
@@ -75,8 +85,14 @@ const renderChangeBadges = (p: ProjectAnalysisRun): React.ReactNode => {
   return <Space size={4}>{badges}</Space>;
 };
 
+// A live run can be deleted mid-poll: the API sweeps runs abandoned by a crashed CLI, and the
+// dashboard may still be open on one. That is a 404, not a connectivity problem.
+const isNotFound = (error: unknown): boolean =>
+  isAxiosError(error) && error.response?.status === 404;
+
 const RunResultPage: React.FC = () => {
   const axios = useAxios();
+  const navigate = useNavigate();
   const {provider, org: orgName, repo: repoName, run: runUuid} = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -96,10 +112,17 @@ const RunResultPage: React.FC = () => {
         throw new Error("Network response was not ok");
       }
       return response.data;
-    }
+    },
+    // Polls itself while the run is RUNNING and stops the moment it completes. A transient error
+    // keeps polling so the page recovers on its own; a 404 means the run is gone, so it stops.
+    refetchInterval: (query) => isNotFound(query.state.error) ? false : pollInterval(query.state.data),
+    retry: (failureCount, error) => !isNotFound(error) && failureCount < 3,
   });
 
   const run = runQuery.data;
+  const runIsLive = isRunLive(run);
+  const runIsStale = isRunStale(run);
+  const runWasSwept = isNotFound(runQuery.error);
 
   const selectedProject = React.useMemo(
     () => run?.projects.find((p) => p.dir === selectedDir) ?? null,
@@ -107,20 +130,21 @@ const RunResultPage: React.FC = () => {
   );
   const drawerOpen = !!selectedProject;
 
-  // Default filter priority: drifted > errored > skipped > all. The user's explicit
-  // pick (userSetFilter) always wins so the auto-pick can't clobber it on refetch.
-  const defaultFilter = React.useMemo<StatusFilter>(() => {
-    if (!run) return 'all';
-    const driftedCount = run.projects?.filter(p => p.drifted && !p.skipped_due_to_pr && p.succeeded).length ?? 0;
-    if (driftedCount > 0) return 'drifted';
-    const erroredCount = run.projects?.filter(p => !p.succeeded).length ?? 0;
-    if (erroredCount > 0) return 'errored';
-    const skippedCount = run.projects?.filter(p => p.skipped_due_to_pr && p.succeeded).length ?? 0;
-    if (skippedCount > 0) return 'skipped';
-    return 'all';
-  }, [run]);
-  const statusFilter: StatusFilter = userSetFilter ?? defaultFilter;
   const allProjects = React.useMemo(() => run?.projects ?? [], [run?.projects]);
+
+  // Calculate counts for filter badges
+  const counts = React.useMemo(() => {
+    const drifted = allProjects.filter(p => p.drifted && !p.skipped_due_to_pr && p.succeeded).length;
+    const errored = allProjects.filter(p => !p.succeeded).length;
+    const skipped = allProjects.filter(p => p.skipped_due_to_pr && p.succeeded).length;
+    const ok = allProjects.filter(p => !p.drifted && !p.skipped_due_to_pr && p.succeeded).length;
+    return {drifted, errored, skipped, ok, all: allProjects.length};
+  }, [allProjects]);
+
+  // Default filter priority: drifted > errored > skipped > all, forced to 'all' while the run is
+  // live so the auto-pick can't hide rows mid-scan. The user's explicit pick (userSetFilter)
+  // always wins so the auto-pick can't clobber it on refetch.
+  const statusFilter: StatusFilter = userSetFilter ?? defaultStatusFilter(run, counts);
 
   // Filter projects based on search text and status filter
   const filteredProjects = React.useMemo(() => {
@@ -144,15 +168,6 @@ const RunResultPage: React.FC = () => {
       return matchesSearch && matchesStatus;
     });
   }, [allProjects, searchText, statusFilter]);
-
-  // Calculate counts for filter badges
-  const counts = React.useMemo(() => {
-    const drifted = allProjects.filter(p => p.drifted && !p.skipped_due_to_pr && p.succeeded).length;
-    const errored = allProjects.filter(p => !p.succeeded).length;
-    const skipped = allProjects.filter(p => p.skipped_due_to_pr && p.succeeded).length;
-    const ok = allProjects.filter(p => !p.drifted && !p.skipped_due_to_pr && p.succeeded).length;
-    return {drifted, errored, skipped, ok, all: allProjects.length};
-  }, [allProjects]);
 
   const copyToClipboard = async (text: string) => {
     try {
@@ -317,9 +332,53 @@ const RunResultPage: React.FC = () => {
         />
 
         {/* Header with title and stats */}
-        <Typography.Title level={4} style={{marginBottom: 16}}>
-          Analysis Run
-        </Typography.Title>
+        <Space align="center" style={{marginBottom: 16}}>
+          <Typography.Title level={4} style={{margin: 0}}>
+            Analysis Run
+          </Typography.Title>
+          {runIsLive && (
+            <Tag icon={<SyncOutlined spin/>} color={colors.primary}>Running</Tag>
+          )}
+        </Space>
+
+        {/* Live progress: only rendered while the scan is in flight. */}
+        {runIsLive && run && (
+          <Card size="small" style={{borderRadius: 8, marginBottom: 24}}>
+            <Space orientation="vertical" size="small" style={{width: '100%'}}>
+              <Space wrap align="center" style={{justifyContent: 'space-between', width: '100%'}}>
+                <Typography.Text strong>
+                  Analyzed {counts.all} of {run.total_projects} projects
+                </Typography.Text>
+                <Typography.Text type="secondary">
+                  Elapsed {dayjs.duration({milliseconds: elapsedMillis(run)}).humanize(false)}
+                </Typography.Text>
+              </Space>
+              <Progress
+                percent={Math.round(scanProgress(counts.all, run.total_projects) * 100)}
+                status="active"
+                strokeColor={colors.primary}
+              />
+              {run.running_projects?.length > 0 && (
+                <Space wrap size={[4, 4]}>
+                  {run.running_projects.map((dir) => (
+                    <Tag key={dir} icon={<SyncOutlined spin/>} color="processing">{dir}</Tag>
+                  ))}
+                </Space>
+              )}
+              {runIsStale && (
+                <Alert
+                  type="warning"
+                  showIcon
+                  title="No updates recently"
+                  description={
+                    `This run last reported ${dayjs(run.updated_at).fromNow()}. The scanner may have stopped; ` +
+                    `abandoned runs are removed automatically.`
+                  }
+                />
+              )}
+            </Space>
+          </Card>
+        )}
 
         {runQuery.isLoading ? (
           <Row gutter={[16, 16]} style={{marginBottom: 24}}>
@@ -389,9 +448,16 @@ const RunResultPage: React.FC = () => {
             </Col>
             <Col xs={24} sm={12} md={8} lg={4}>
               <Card size="small" style={{borderRadius: 8, height: '100%'}}>
+                {/* duration_millis is only set at completion, so a live run shows elapsed time. */}
                 <Statistic
-                  title={<span style={{fontSize: 12, color: colors.textSecondary}}>Duration</span>}
-                  value={dayjs.duration({milliseconds: run.duration_millis}).asSeconds().toFixed(1)}
+                  title={
+                    <span style={{fontSize: 12, color: colors.textSecondary}}>
+                      {runIsLive ? 'Elapsed' : 'Duration'}
+                    </span>
+                  }
+                  value={dayjs.duration({
+                    milliseconds: runIsLive ? elapsedMillis(run) : run.duration_millis,
+                  }).asSeconds().toFixed(1)}
                   suffix="s"
                   prefix={<ClockCircleOutlined style={{color: colors.primary}} />}
                 />
@@ -444,22 +510,40 @@ const RunResultPage: React.FC = () => {
 
         {/* Error State */}
         {runQuery.isError && (
-          <Alert
-            title="Failed to load analysis run"
-            description="We couldn't fetch the analysis run details. Please check your connection and try again."
-            type="error"
-            showIcon
-            action={
-              <Button
-                size="small"
-                icon={<ReloadOutlined />}
-                onClick={() => runQuery.refetch()}
-              >
-                Retry
-              </Button>
-            }
-            style={{marginBottom: 16}}
-          />
+          runWasSwept ? (
+            <Alert
+              title="This analysis run is no longer available"
+              description={
+                "The run was removed. Runs abandoned by a scanner that stopped partway through are " +
+                "cleaned up automatically; completed runs are kept."
+              }
+              type="warning"
+              showIcon
+              action={
+                <Button size="small" onClick={() => navigate(`/${provider}/${orgName}/${repoName}`)}>
+                  Back to runs
+                </Button>
+              }
+              style={{marginBottom: 16}}
+            />
+          ) : (
+            <Alert
+              title="Failed to load analysis run"
+              description="We couldn't fetch the analysis run details. Please check your connection and try again."
+              type="error"
+              showIcon
+              action={
+                <Button
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  onClick={() => runQuery.refetch()}
+                >
+                  Retry
+                </Button>
+              }
+              style={{marginBottom: 16}}
+            />
+          )
         )}
 
         {/* Table */}

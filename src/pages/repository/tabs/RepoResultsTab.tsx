@@ -8,6 +8,7 @@ import {
   PauseCircleOutlined,
   ReloadOutlined,
   RocketOutlined,
+  SyncOutlined,
   WarningOutlined
 } from "@ant-design/icons";
 import {GitOrganization} from "../../../model/GitOrganization.ts";
@@ -21,6 +22,7 @@ import {useNavigate} from "react-router";
 import {useProvider} from "../../../utils/provider.ts";
 import {colors} from "../../../theme/theme.ts";
 import {AnalysisRun, RepositoryRunStats} from "../../../model/AnalysisRun.ts";
+import {isRunLive, LIVE_LIST_POLL_MS} from "../../run_result/runStatus.ts";
 
 export interface RepoResultsTabProps {
   organization: GitOrganization;
@@ -42,12 +44,15 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
     placeholderData: keepPreviousData,
     queryFn: async () => {
       const apiPage = currentPage - 1;
-      const response = await axios.get(`/v1/repo/${repository.id}/runs?page=${apiPage}`);
+      const response = await axios.get<AnalysisRun[]>(`/v1/repo/${repository.id}/runs?page=${apiPage}`);
       if (!isOk(response)) {
         throw new Error("Network response was not ok");
       }
       return response.data;
     },
+    // Only polls while a run on the current page is still in flight, so a page of completed runs
+    // costs nothing.
+    refetchInterval: (query) => query.state.data?.some(isRunLive) ? LIVE_LIST_POLL_MS : false,
   });
 
   const repoStatsQuery = useQuery({
@@ -85,6 +90,21 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
         const hasErrors = item.total_projects_errored > 0;
         const hasSkipped = item.total_projects_skipped > 0;
 
+        // A live run's counters are still filling in, so lead with the running state rather than
+        // reporting a partial tally as final.
+        if (isRunLive(item)) {
+          return (
+            <Space size={4}>
+              <Tag icon={<SyncOutlined spin/>} color="processing">Running</Tag>
+              {hasDrift && (
+                <Tag icon={<WarningOutlined />} color={colors.warning}>
+                  {item.total_projects_drifted} drifted so far
+                </Tag>
+              )}
+            </Space>
+          );
+        }
+
         if (!hasDrift && !hasErrors && !hasSkipped) {
           return <Tag icon={<CheckCircleOutlined />} color={colors.success}>OK</Tag>;
         }
@@ -114,7 +134,11 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
       key: 'duration',
       title: 'Duration',
       dataIndex: 'duration_millis',
-      render: (value) => {
+      render: (value, item) => {
+        // duration_millis is only set at completion.
+        if (isRunLive(item)) {
+          return <Typography.Text type="secondary">In progress</Typography.Text>;
+        }
         return (<Tooltip title={dayjs.duration({milliseconds: value}).asSeconds() + 's'}>
             {dayjs.duration({milliseconds: value}).humanize(false)}
           </Tooltip>
@@ -262,7 +286,9 @@ export const RepoResultsTab: React.FC<RepoResultsTabProps> = ({organization, rep
                  dataSource={repoAnalysisRuns.data}
                  rowKey="uuid"
                  columns={columns}
-                 loading={repoAnalysisRuns.isLoading || repoAnalysisRuns.isFetching}
+                 // isPlaceholderData rather than isFetching: it covers the initial load and page
+                 // changes without flashing the spinner on every background poll of a live run.
+                 loading={repoAnalysisRuns.isLoading || repoAnalysisRuns.isPlaceholderData}
                  pagination={{
                    current: currentPage,
                    pageSize: API_PAGE_SIZE,
